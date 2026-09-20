@@ -134,6 +134,37 @@ EXTRA_JS = """
 """
 
 
+def png_size(path):
+    """Lê largura e altura do cabeçalho IHDR de um PNG, sem dependências."""
+    with open(path, "rb") as fh:
+        head = fh.read(24)
+    if len(head) < 24 or head[:8] != b"\x89PNG\r\n\x1a\n":
+        return None
+    return int.from_bytes(head[16:20], "big"), int.from_bytes(head[20:24], "big")
+
+
+def check_images(body):
+    """Confere que cada <img> aponta para um arquivo existente e que as
+    dimensões declaradas batem com as reais.
+
+    Trocar a imagem e esquecer do width/height deixa a página com a proporção
+    errada — o navegador reserva o espaço pelo que está escrito no HTML.
+    """
+    problems = []
+    for m in re.finditer(r'<img\s+src="([^"]+)"\s+width="(\d+)"\s+height="(\d+)"', body):
+        src, w, h = m.group(1), int(m.group(2)), int(m.group(3))
+        path = ROOT / "docs" / src
+        if not path.exists():
+            problems.append("imagem não encontrada: docs/%s" % src)
+            continue
+        real = png_size(path)
+        if real and real != (w, h):
+            problems.append(
+                "docs/%s mede %dx%d, mas o HTML declara %dx%d"
+                % (src, real[0], real[1], w, h))
+    return problems
+
+
 def main() -> int:
     if not SRC.exists():
         print(f"erro: não achei {SRC}", file=sys.stderr)
@@ -163,6 +194,12 @@ def main() -> int:
               file=sys.stderr)
         return 1
     body = body.replace(anchor, "</div>\n" + GETIT + "  </div>\n</header>", 1)
+
+    problems = check_images(body)
+    if problems:
+        for p in problems:
+            print("erro: " + p, file=sys.stderr)
+        return 1
 
     # Os scripts extras entram no fim do último <script> existente.
     tail = "</script>"
