@@ -1613,11 +1613,34 @@ nvim  <span class="c"># reinstala tudo do zero</span></code></pre>
   <h3>Mudar o tema</h3>
   <p>Em <code>lua/plugins/ui.lua</code>, o campo <code>style</code> aceita <code>night</code>, <code>storm</code>, <code>moon</code> ou <code>day</code>. Pra trocar de família inteira, substitua o plugin <code>tokyonight.nvim</code> e ajuste o <code>theme</code> da lualine.</p>
 
-  <h3>Versionar a config</h3>
-<pre><code>cd ~/.config/nvim
-git init &amp;&amp; git add -A
-git commit -m <span class="s">"config inicial"</span></code></pre>
-  <p>Inclua o <code>lazy-lock.json</code> — ele fixa a versão exata de cada plugin e faz a config ser reproduzível em outra máquina.</p>
+  <h3>Sobreviver a uma formatação</h3>
+  <p>Existe um repositório pronto em <code>~/nvim-rust</code>, com a config, o manual e um instalador que reconstrói tudo numa máquina zerada:</p>
+<pre><code>~/nvim-rust/
+├─ install.sh       <span class="c">← deps do sistema, rustup, fonte, plugins, parsers, Mason</span>
+├─ nvim/            <span class="c">← a config (copiada para ~/.config/nvim)</span>
+├─ docs/manual.html <span class="c">← este manual</span>
+├─ README.md
+└─ LICENSE          <span class="c">← MIT</span></code></pre>
+  <p>Numa máquina nova:</p>
+<pre><code>git clone &lt;seu-repo&gt; nvim-rust
+cd nvim-rust &amp;&amp; ./install.sh</code></pre>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><code>./install.sh</code></td><td>instala tudo</td></tr>
+    <tr><td><code>--dry-run</code></td><td>mostra o que faria, sem tocar em nada</td></tr>
+    <tr><td><code>--deps-only</code></td><td>só as dependências do sistema</td></tr>
+    <tr><td><code>--no-deps</code></td><td>só a config</td></tr>
+  </table>
+  </div>
+  <p>Configs existentes viram <code>*.bak.&lt;timestamp&gt;</code> — o script nunca apaga nada. Detecta pacman, apt, dnf, zypper e brew.</p>
+
+  <div class="panel warn">
+    <div class="ph">Mantenha o repo em dia</div>
+    <p>A config em <code>~/.config/nvim</code> e a cópia em <code>~/nvim-rust/nvim/</code> são <strong>arquivos separados</strong>. Depois de mexer na config, sincronize antes de commitar:</p>
+<pre><code>rsync -a --delete ~/.config/nvim/ ~/nvim-rust/nvim/
+cd ~/nvim-rust &amp;&amp; git add -A &amp;&amp; git commit -m <span class="s">"ajuste X"</span></code></pre>
+    <p>O <code>lazy-lock.json</code> vai junto: ele fixa o commit exato de cada plugin, e é o que faz a reinstalação reproduzir <em>a mesma</em> config, não a versão mais nova de cada plugin.</p>
+  </div>
 
   <h3>Onde aprender mais</h3>
   <ul>
