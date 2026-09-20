@@ -12,6 +12,28 @@ startup: 38 ms  ·  38 plugins  ·  Neovim 0.11+
 
 ![Neovim aberto no código-fonte do Git Hydra, com a árvore de arquivos à esquerda e realce de sintaxe na paleta da marca](docs/assets/screenshot.png)
 
+## Os 30 segundos iniciais
+
+```bash
+nvim
+```
+
+No menu inicial, aperte **`p`** (Abrir projeto), escolha um da lista e dê Enter. Pronto: árvore de arquivos à esquerda, um arquivo do projeto aberto no centro, terminal embaixo e abas no topo.
+
+Aperte **`w`** em vez de `p` e o Claude Code abre junto, à direita.
+
+```
+┌──────────┬─────────────────────┬──────────┐
+│ arquivos │       código        │  agente  │
+│  Ctrl+B  │                     │   de IA  │
+│          ├─────────────────────┤ espaço a c│
+│          │      terminal       │          │
+│          │       Ctrl+`        │          │
+└──────────┴─────────────────────┴──────────┘
+```
+
+`nvim ~/meu-projeto` monta o mesmo ambiente direto da linha de comando.
+
 ## Instalação
 
 ```bash

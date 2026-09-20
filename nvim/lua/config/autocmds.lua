@@ -87,16 +87,18 @@ vim.api.nvim_create_autocmd("BufEnter", {
 })
 
 -- Abriu o nvim apontando para uma PASTA (`nvim .` ou `nvim ~/projeto`)?
--- Mostra a árvore de arquivos na esquerda, como um editor gráfico faria.
+-- Monta o ambiente de trabalho inteiro: árvore à esquerda, terminal embaixo.
+-- Quem quiser o agente de IA junto liga `vim.g.hydra_workspace_ai = true`.
 vim.api.nvim_create_autocmd("VimEnter", {
-  group = augroup("open_dir_as_tree"),
+  group = augroup("open_dir_as_workspace"),
   once = true,
+  nested = true,
   callback = function()
     local arg = vim.fn.argv(0)
     if type(arg) ~= "string" or arg == "" then return end
     if vim.fn.isdirectory(arg) ~= 1 then return end
 
-    -- entra na pasta, para que buscas e grep fiquem no escopo certo
+    -- entra na pasta, para que buscas, grep e LSP fiquem no escopo certo
     vim.cmd.cd(arg)
     -- o buffer do diretório não serve para nada; descarta
     local dir_buf = vim.api.nvim_get_current_buf()
@@ -104,7 +106,7 @@ vim.api.nvim_create_autocmd("VimEnter", {
     pcall(vim.api.nvim_buf_delete, dir_buf, { force = true })
 
     vim.schedule(function()
-      Snacks.explorer()
+      require("hydra.workspace").open({ ai = vim.g.hydra_workspace_ai or false })
     end)
   end,
 })

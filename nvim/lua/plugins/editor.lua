@@ -139,7 +139,10 @@ return {
     "stevearc/oil.nvim",
     lazy = false,
     opts = {
-      default_file_explorer = true,
+      -- false de propósito: quem abre um diretório na linha de comando é o
+      -- autocmd do workspace (árvore + terminal). O oil continua a um `-`
+      -- de distância para editar o sistema de arquivos como texto.
+      default_file_explorer = false,
       view_options = { show_hidden = true },
       keymaps = {
         ["<C-h>"] = false, -- libera pra navegação de janelas

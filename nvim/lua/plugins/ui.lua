@@ -29,10 +29,17 @@ return {
         sources = {
           files = { hidden = true },
           grep  = { hidden = true },
-          explorer = { hidden = true },
+          explorer = {
+            hidden = true,
+            layout = { preset = "sidebar", preview = false },
+            win = { list = { keys = { ["<C-b>"] = "close" } } },
+          },
         },
       },
-      explorer = { enabled = true },   -- árvore de arquivos lateral
+      explorer = {
+        enabled = true,                -- árvore de arquivos lateral
+        replace_netrw = true,
+      },
       scope = { enabled = true },      -- textobjects de escopo por indentação
       scroll = { enabled = true },     -- scroll suave
       statuscolumn = { enabled = true },
@@ -73,14 +80,16 @@ return {
         },
         preset = {
           keys = {
-            { icon = "  ", key = "f", desc = "Buscar arquivo",   action = ":lua Snacks.dashboard.pick('files')" },
-            { icon = "  ", key = "n", desc = "Arquivo novo",     action = ":ene | startinsert" },
-            { icon = "  ", key = "g", desc = "Grep no projeto",  action = ":lua Snacks.dashboard.pick('live_grep')" },
-            { icon = "  ", key = "r", desc = "Recentes",         action = ":lua Snacks.dashboard.pick('oldfiles')" },
-            { icon = "  ", key = "s", desc = "Restaurar sessão", section = "session" },
+            { icon = "  ", key = "p", desc = "Abrir projeto",      action = ":lua require('hydra.workspace').pick_project()" },
+            { icon = "  ", key = "w", desc = "Workspace + IA",      action = ":lua require('hydra.workspace').pick_project({ ai = 'claude' })" },
+            { icon = "  ", key = "s", desc = "Retomar onde parei",  section = "session" },
+            { icon = "  ", key = "f", desc = "Buscar arquivo",      action = ":lua Snacks.dashboard.pick('files')" },
+            { icon = "  ", key = "g", desc = "Grep no projeto",     action = ":lua Snacks.dashboard.pick('live_grep')" },
+            { icon = "  ", key = "r", desc = "Arquivos recentes",   action = ":lua Snacks.dashboard.pick('oldfiles')" },
+            { icon = "  ", key = "n", desc = "Arquivo novo",        action = ":ene | startinsert" },
             { icon = "󰒲  ", key = "l", desc = "Lazy (plugins)",   action = ":Lazy" },
-            { icon = "  ", key = "m", desc = "Mason (LSP/tools)", action = ":Mason" },
-            { icon = "  ", key = "q", desc = "Sair",             action = ":qa" },
+            { icon = "  ", key = "m", desc = "Mason (LSP/tools)", action = ":Mason" },
+            { icon = "  ", key = "q", desc = "Sair",             action = ":qa" },
           },
         },
       },
@@ -183,8 +192,17 @@ return {
         close_command = function(n) Snacks.bufdelete(n) end,
         right_mouse_command = function(n) Snacks.bufdelete(n) end,
         diagnostics = "nvim_lsp",
-        always_show_bufferline = false,
+        -- sempre visível: as abas são a forma de saber o que está aberto.
+        -- Escondê-las com um arquivo só deixa a interface "pulando".
+        always_show_bufferline = true,
         separator_style = "thin",
+        show_buffer_close_icons = true,
+        show_close_icon = false,
+        numbers = function(opts)
+          return string.format("%s", opts.ordinal) -- 1, 2, 3… para o Alt+N
+        end,
+        indicator = { style = "underline" },
+        hover = { enabled = true, delay = 120, reveal = { "close" } },
         diagnostics_indicator = function(_, _, diag)
           return (diag.error and " " .. diag.error .. " " or "") .. (diag.warning and " " .. diag.warning or "")
         end,

@@ -57,7 +57,9 @@ return {
         watch = true, -- recarrega o buffer quando a IA edita o arquivo no disco
         win = {
           layout = "right",
-          split = { width = 90 },
+          -- fração da tela, não colunas fixas: 90 colunas fixas esmagavam
+          -- o código em telas menores
+          split = { width = 0.32 },
         },
         tools = {
           -- os 4 abaixo já vêm pré-configurados; listados aqui só pra

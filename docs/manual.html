@@ -497,6 +497,51 @@ footer{border-top:1px solid var(--line); margin-top:60px; padding-top:22px; colo
     <p>E você não precisa decorar: aperte a barra de espaço e <strong>espere meio segundo</strong>. Um menu aparece com tudo que existe a partir dali, e vai se aprofundando conforme você digita.</p>
   </div>
 
+  <h3>Os 30 segundos iniciais</h3>
+  <p>Abra o editor sem argumento nenhum e siga a tela:</p>
+<pre><code>nvim</code></pre>
+  <ol class="steps">
+    <li>No menu inicial, aperte <kbd>p</kbd> — <strong>Abrir projeto</strong></li>
+    <li>Escolha um projeto da lista (ela junta o que você abriu recentemente com os repositórios que encontrar no seu diretório pessoal)</li>
+    <li><kbd>Enter</kbd>. Pronto: árvore de arquivos à esquerda, um arquivo do projeto já aberto no centro, terminal embaixo e as abas no topo.</li>
+  </ol>
+  <p>Aperte <kbd>w</kbd> em vez de <kbd>p</kbd> e o painel do Claude Code abre junto, à direita.</p>
+
+  <div class="panel tip">
+    <div class="ph">Direto da linha de comando</div>
+    <p><code>nvim ~/meu-projeto</code> (ou <code>nvim .</code> de dentro dele) monta o mesmo ambiente, sem passar pelo menu.</p>
+  </div>
+
+  <h3>O layout</h3>
+<pre><code>┌──────────┬─────────────────────┬──────────┐
+│ arquivos │       código        │  agente  │
+│  Ctrl+B  │                     │   de IA  │
+│          ├─────────────────────┤  espaço  │
+│          │      terminal       │   a c    │
+│          │       Ctrl+`        │          │
+└──────────┴─────────────────────┴──────────┘</code></pre>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>W</kbd></td><td>monta o layout completo (arquivos + terminal + IA)</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>w</kbd><kbd>w</kbd></td><td>só arquivos + terminal</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>w</kbd><kbd>q</kbd></td><td>fecha os painéis, deixa só o código</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>o</kbd></td><td>trocar de projeto a qualquer momento</td></tr>
+  </table>
+  </div>
+
+  <h3>As abas</h3>
+  <p>Cada arquivo aberto vira uma aba numerada no topo.</p>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd>Alt</kbd>+<kbd>1</kbd> … <kbd>Alt</kbd>+<kbd>9</kbd></td><td>vai direto para a aba (o número está escrito nela)</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>Tab</kbd></td><td>próxima aba · <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Tab</kbd> volta</td></tr>
+    <tr><td><kbd>Alt</kbd>+<kbd>←</kbd> / <kbd>Alt</kbd>+<kbd>→</kbd></td><td>aba anterior / próxima</td></tr>
+    <tr><td><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>←</kbd> / <kbd>→</kbd></td><td>reordena a aba</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>b</kbd><kbd>p</kbd></td><td>escolher aba por letra</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>w</kbd> <kbd>Ctrl</kbd>+<kbd>w</kbd></td><td>fecha a aba atual</td></tr>
+  </table>
+  </div>
+
   <h3>As teclas que você já conhece</h3>
   <div class="kt-wrap">
   <table class="kt">
@@ -506,7 +551,8 @@ footer{border-top:1px solid var(--line); margin-top:60px; padding-top:22px; colo
     <tr><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>f</kbd></td><td>Buscar no projeto inteiro</td></tr>
     <tr><td><kbd>Ctrl</kbd>+<kbd>s</kbd></td><td>Salvar (funciona até no meio da digitação)</td></tr>
     <tr><td><kbd>Ctrl</kbd>+<kbd>/</kbd></td><td>Comentar a linha ou a seleção</td></tr>
-    <tr><td><kbd>Ctrl</kbd>+<kbd>`</kbd></td><td>Terminal</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>`</kbd></td><td>Terminal (abre sob o código; fecha guardando o que estava rodando)</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>o</kbd></td><td>Abrir outro projeto</td></tr>
     <tr><td><kbd>Ctrl</kbd>+<kbd>a</kbd></td><td>Selecionar o arquivo inteiro</td></tr>
     <tr><td><kbd>F2</kbd></td><td>Renomear símbolo</td></tr>
     <tr><td><kbd>F12</kbd></td><td>Ir pra definição</td></tr>
@@ -515,13 +561,6 @@ footer{border-top:1px solid var(--line); margin-top:60px; padding-top:22px; colo
     <tr><td><kbd>Ctrl</kbd>+<kbd>w</kbd> <kbd>Ctrl</kbd>+<kbd>w</kbd></td><td>Fechar o arquivo atual (duas vezes, porque <kbd>Ctrl</kbd>+<kbd>w</kbd> sozinho é o prefixo de janelas do Vim)</td></tr>
   </table>
   </div>
-
-  <h3>Abrir uma pasta</h3>
-  <p>Igual a um editor gráfico — aponte o Neovim para o diretório:</p>
-<pre><code>cd ~/meu-projeto &amp;&amp; nvim .
-<span class="c"># ou direto:</span>
-nvim ~/meu-projeto</code></pre>
-  <p>A árvore abre sozinha na lateral e o diretório vira a raiz do projeto: buscas, grep e o <code>rust-analyzer</code> passam a trabalhar nesse escopo.</p>
 
   <h3>Dentro da árvore</h3>
   <div class="kt-wrap">
