@@ -111,6 +111,12 @@ map({ "n", "i", "v" }, "<C-o>", function()
   ws().pick_project()
 end, { desc = "Abrir projeto (lista os repositórios do seu HOME)" })
 map("n", "<leader>op", function() ws().pick_project() end,
-  { desc = "Abrir projeto" })
+  { desc = "Abrir projeto (lista detectada)" })
+map("n", "<leader>ob", function() ws().browse() end,
+  { desc = "Navegar pastas até o projeto" })
+map({ "n", "i", "v" }, "<C-S-o>", function()
+  vim.cmd("stopinsert")
+  ws().browse()
+end, { desc = "Navegar pastas até o projeto" })
 map("n", "<leader>oP", function() ws().pick_project({ ai = "claude" }) end,
   { desc = "Abrir projeto com a IA junto" })

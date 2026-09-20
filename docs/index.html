@@ -586,7 +586,7 @@ cd nvim-rust &amp;&amp; ./install.sh</code></pre>
   <p>Abra o editor sem argumento nenhum e siga a tela:</p>
 <pre><code>nvim</code></pre>
   <ol class="steps">
-    <li>No menu inicial, aperte <kbd>p</kbd> — <strong>Abrir projeto</strong></li>
+    <li>No menu inicial, aperte <kbd>p</kbd> — <strong>Abrir projeto</strong> (ou <kbd>b</kbd> para navegar as pastas do computador)</li>
     <li>Escolha um projeto da lista (ela junta o que você abriu recentemente com os repositórios que encontrar no seu diretório pessoal)</li>
     <li><kbd>Enter</kbd>. Pronto: árvore de arquivos à esquerda, um arquivo do projeto já aberto no centro, terminal embaixo e as abas no topo.</li>
   </ol>
@@ -596,6 +596,22 @@ cd nvim-rust &amp;&amp; ./install.sh</code></pre>
     <div class="ph">Direto da linha de comando</div>
     <p><code>nvim ~/meu-projeto</code> (ou <code>nvim .</code> de dentro dele) monta o mesmo ambiente, sem passar pelo menu.</p>
   </div>
+
+  <h3>O projeto não está na lista?</h3>
+  <p>A lista do <kbd>p</kbd> mostra o que o editor conseguiu detectar sozinho. Quando o projeto está num canto qualquer do disco, use o <strong>navegador de pastas</strong>: <kbd>b</kbd> no menu inicial, ou <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>o</kbd> a qualquer momento. (Do próprio <kbd>p</kbd>, <kbd>Ctrl</kbd>+<kbd>b</kbd> pula para lá.)</p>
+  <p>Ele começa no seu diretório pessoal e você desce até achar. As pastas marcadas com <strong style="color:var(--accent)">●</strong> são projetos — o editor achou um <code>.git</code>, <code>Cargo.toml</code>, <code>package.json</code> ou equivalente dentro delas.</p>
+  <div class="kt-wrap">
+  <table class="kt">
+    <caption>Navegando</caption>
+    <tr><td><kbd>Enter</kbd></td><td><strong>entra</strong> na pasta</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>o</kbd></td><td><strong>abre</strong> a pasta selecionada como projeto</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>a</kbd></td><td>abre a pasta em que você <em>está</em></td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>u</kbd> · <kbd>Ctrl</kbd>+<kbd>h</kbd></td><td>sobe um nível (ou escolha <code>../</code> na lista)</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>e</kbd></td><td>volta para o diretório pessoal</td></tr>
+    <tr><td>digitar</td><td>filtra as pastas do nível atual</td></tr>
+  </table>
+  </div>
+  <p>O caminho em que você está e essas teclas ficam escritos no topo da janela — não precisa decorar.</p>
 
   <h3>O layout</h3>
 <pre><code>┌──────────┬─────────────────────┬──────────┐
@@ -637,7 +653,8 @@ cd nvim-rust &amp;&amp; ./install.sh</code></pre>
     <tr><td><kbd>Ctrl</kbd>+<kbd>s</kbd></td><td>Salvar (funciona até no meio da digitação)</td></tr>
     <tr><td><kbd>Ctrl</kbd>+<kbd>/</kbd></td><td>Comentar a linha ou a seleção</td></tr>
     <tr><td><kbd>Ctrl</kbd>+<kbd>`</kbd></td><td>Terminal (abre sob o código; fecha guardando o que estava rodando)</td></tr>
-    <tr><td><kbd>Ctrl</kbd>+<kbd>o</kbd></td><td>Abrir outro projeto</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>o</kbd></td><td>Abrir outro projeto (lista detectada)</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>o</kbd></td><td>Navegar pastas até o projeto</td></tr>
     <tr><td><kbd>Ctrl</kbd>+<kbd>a</kbd></td><td>Selecionar o arquivo inteiro</td></tr>
     <tr><td><kbd>F2</kbd></td><td>Renomear símbolo</td></tr>
     <tr><td><kbd>F12</kbd></td><td>Ir pra definição</td></tr>

@@ -223,9 +223,23 @@ end
 function M.pick_project(opts)
   opts = opts or {}
   Snacks.picker.projects({
+    title = "Projetos  │  ⏎ abrir   ^B navegar pastas",
     dev = dev_dirs(),
     patterns = { ".git", "Cargo.toml", "package.json", "go.mod",
                  "pyproject.toml", "Makefile", ".hg", ".svn" },
+    actions = {
+      browse_fs = function(picker)
+        picker:close()
+        vim.schedule(function() M.browse(vim.uv.os_homedir(), opts) end)
+      end,
+    },
+    win = {
+      input = {
+        keys = {
+          ["<C-b>"] = { "browse_fs", mode = { "n", "i" }, desc = "Navegar pastas do sistema" },
+        },
+      },
+    },
     confirm = function(picker, item)
       picker:close()
       if not item then return end
@@ -243,6 +257,161 @@ function M.pick_project(opts)
       end)
     end,
   })
+end
+
+-- ── Navegar o sistema de arquivos ─────────────────────────────
+-- O picker de projetos só mostra o que ele conseguiu detectar. Quando o
+-- projeto está num canto qualquer do disco, você precisa é de um navegador:
+-- entra e sai de pastas até achar, e abre onde quiser.
+
+local PROJECT_MARKERS = {
+  ".git", "Cargo.toml", "package.json", "go.mod",
+  "pyproject.toml", "Makefile", "composer.json",
+}
+
+local function is_project(dir)
+  for _, marker in ipairs(PROJECT_MARKERS) do
+    if vim.uv.fs_stat(dir .. "/" .. marker) then return true end
+  end
+  return false
+end
+
+local function subdirs(dir)
+  local names = {}
+  local fd = vim.uv.fs_scandir(dir)
+  if not fd then return names end
+  while true do
+    local name, kind = vim.uv.fs_scandir_next(fd)
+    if not name then break end
+    -- fs_scandir_next não resolve symlink: confirma com stat
+    if kind == "directory"
+      or (kind == "link" and (vim.uv.fs_stat(dir .. "/" .. name) or {}).type == "directory")
+    then
+      table.insert(names, name)
+    end
+  end
+  table.sort(names, function(a, b)
+    local ha, hb = a:sub(1, 1) == ".", b:sub(1, 1) == "."
+    if ha ~= hb then return hb end      -- ocultas por último
+    return a:lower() < b:lower()
+  end)
+  return names
+end
+
+--- Navega pastas a partir de `start`, e abre a que você escolher.
+--- @param start? string diretório inicial (padrão: seu diretório pessoal)
+--- @param opts? table repassado para M.open (ex.: { ai = "claude" })
+function M.browse(start, opts)
+  opts = opts or {}
+  local state = {
+    dir = vim.fs.normalize(start or vim.uv.os_homedir()),
+  }
+
+  local function finder()
+    local items, i = {}, 0
+    local parent = vim.fs.dirname(state.dir)
+    if parent and parent ~= state.dir then
+      i = i + 1
+      table.insert(items, {
+        idx = i, score = 0, text = "../", dir = parent, file = parent,
+      })
+    end
+    for _, name in ipairs(subdirs(state.dir)) do
+      i = i + 1
+      local full = state.dir .. "/" .. name
+      table.insert(items, {
+        idx = i, score = 0,
+        text = name .. (is_project(full) and "  ●" or ""),
+        dir = full, file = full,
+      })
+    end
+    return items
+  end
+
+  local function open_dir(picker, dir)
+    picker:close()
+    vim.schedule(function()
+      vim.cmd.cd(dir)
+      vim.cmd("silent! %bdelete!")
+      vim.schedule(function()
+        M.open(opts)
+        vim.notify("projeto: " .. vim.fn.fnamemodify(dir, ":~"), vim.log.levels.INFO)
+      end)
+    end)
+  end
+
+  -- o título carrega o caminho e as teclas: ninguém deveria precisar
+  -- decorar atalho para navegar numa lista de pastas
+  local HINT = "  │  ⏎ entrar   ^O abrir   ^U subir"
+
+  local function title_for(dir)
+    return vim.fn.fnamemodify(dir, ":~")
+      .. (is_project(dir) and "  ●" or "") .. HINT
+  end
+
+  local function goto_dir(picker, dir)
+    state.dir = vim.fs.normalize(dir)
+    -- o título renderizado vem de picker.title (opts.title virou template
+    -- na primeira renderização e não muda mais sozinho)
+    picker.title = title_for(state.dir)
+    pcall(function() picker:update_titles() end)
+    -- O filtro que você digitou para achar a pasta não vale mais lá dentro:
+    -- sem limpar, a lista nova nasce vazia.
+    pcall(function() picker.input:set("") end)
+    picker:find()
+  end
+
+  local picker
+  picker = Snacks.picker({
+    title = "{title}",
+    finder = finder,
+    format = "text",
+    layout = { preset = "default" },
+    -- Enter entra na pasta; para ABRIR, Ctrl+O (ou Ctrl+A na atual)
+    confirm = function(picker, item)
+      if not item then return end
+      goto_dir(picker, item.dir)
+    end,
+    actions = {
+      open_selected = function(picker, item)
+        if item then open_dir(picker, item.dir) end
+      end,
+      open_current = function(picker)
+        open_dir(picker, state.dir)
+      end,
+      go_up = function(picker)
+        local parent = vim.fs.dirname(state.dir)
+        if parent and parent ~= state.dir then
+          goto_dir(picker, parent)
+        end
+      end,
+      go_home = function(picker)
+        goto_dir(picker, vim.uv.os_homedir())
+      end,
+    },
+    win = {
+      input = {
+        keys = {
+          ["<C-o>"] = { "open_selected", mode = { "n", "i" }, desc = "Abrir a pasta selecionada" },
+          ["<C-a>"] = { "open_current", mode = { "n", "i" }, desc = "Abrir a pasta atual" },
+          ["<C-u>"] = { "go_up", mode = { "n", "i" }, desc = "Subir um nível" },
+          ["<C-h>"] = { "go_up", mode = { "n", "i" }, desc = "Subir um nível" },
+          ["<C-e>"] = { "go_home", mode = { "n", "i" }, desc = "Ir para o diretório pessoal" },
+        },
+      },
+      list = {
+        keys = {
+          ["<C-o>"] = "open_selected",
+          ["<C-a>"] = "open_current",
+          ["-"] = "go_up",
+        },
+      },
+    },
+  })
+
+  picker.title = title_for(state.dir)
+  pcall(function() picker:update_titles() end)
+  return picker
 end
 
 return M

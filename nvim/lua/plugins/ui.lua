@@ -81,6 +81,7 @@ return {
         preset = {
           keys = {
             { icon = "  ", key = "p", desc = "Abrir projeto",      action = ":lua require('hydra.workspace').pick_project()" },
+            { icon = "  ", key = "b", desc = "Navegar pastas",      action = ":lua require('hydra.workspace').browse()" },
             { icon = "  ", key = "w", desc = "Workspace + IA",      action = ":lua require('hydra.workspace').pick_project({ ai = 'claude' })" },
             { icon = "  ", key = "s", desc = "Retomar onde parei",  section = "session" },
             { icon = "  ", key = "f", desc = "Buscar arquivo",      action = ":lua Snacks.dashboard.pick('files')" },

@@ -20,6 +20,8 @@ nvim
 
 No menu inicial, aperte **`p`** (Abrir projeto), escolha um da lista e dê Enter. Pronto: árvore de arquivos à esquerda, um arquivo do projeto aberto no centro, terminal embaixo e abas no topo.
 
+Projeto não está na lista? **`b`** abre o navegador de pastas: `Enter` entra, `Ctrl+O` abre, `Ctrl+U` sobe. As pastas com `●` são projetos.
+
 Aperte **`w`** em vez de `p` e o Claude Code abre junto, à direita.
 
 ```
