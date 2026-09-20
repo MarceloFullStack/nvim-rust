@@ -5,8 +5,10 @@ Gera docs/index.html (a página do GitHub Pages) a partir de docs/manual.html.
 O manual.html é escrito sem <!doctype>/<html>/<head>/<body> porque nasceu para
 um host que fornece esse esqueleto. Este script embrulha o conteúdo num
 documento HTML completo e acrescenta o que só faz sentido na versão pública:
-charset e viewport, metadados sociais, o bloco de instalação no topo e um
-botão de tema (a página hospedada não herda o tema de nenhum host).
+charset e viewport, metadados sociais e o bloco de instalação no topo.
+
+A página é dark-only de propósito: a identidade vem do Git Hydra, que é um
+preto esverdeado com neon. Não há alternância de tema para quebrar isso.
 
 Uso:  python3 tools/build-docs.py
 """
@@ -29,22 +31,27 @@ DESCRIPTION = (
 #    página hospedada precisa por conta própria. ───────────────────────
 RESET = """
 /* ── Reset (a versão hospedada não herda esqueleto de nenhum host) ── */
-html{color-scheme:light dark}
+html{color-scheme:dark}
 body{margin:0}
 img{max-width:100%}
 [hidden]{display:none!important}
 
 /* ── Bloco de instalação, no topo ──────────────────────────────────── */
 .getit{
-  margin-top:26px; padding:18px 20px;
-  border:1px solid var(--line); border-radius:12px;
-  background:var(--surface); box-shadow:var(--shadow);
+  margin-top:26px; padding:18px 20px; position:relative; overflow:hidden;
+  border:1px solid var(--glow-line); border-radius:12px;
+  background:var(--surface); box-shadow:var(--shadow), var(--glow);
   display:flex; flex-direction:column; gap:12px; max-width:62ch;
+}
+.getit::before{
+  content:""; position:absolute; top:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent);
 }
 .getit-head{
   font-family:var(--f-mono); font-size:.6875rem; font-weight:600;
   letter-spacing:.14em; text-transform:uppercase; color:var(--accent);
   display:flex; align-items:center; justify-content:space-between; gap:12px;
+  text-shadow:0 0 16px rgba(52,211,153,.4);
 }
 .getit-cmd{margin:0}
 .getit-cmd pre{margin:0; background:var(--bg)}
@@ -64,25 +71,13 @@ img{max-width:100%}
   display:inline-flex; align-items:center; gap:7px;
 }
 .btn:hover{border-color:var(--accent); color:var(--accent)}
-.btn.primary{background:var(--accent); border-color:var(--accent); color:#fff}
-.btn.primary:hover{opacity:.9; color:#fff}
-:root:not([data-theme="light"]) .btn.primary{color:#16161e}
-@media (prefers-color-scheme:light){
-  :root:not([data-theme="dark"]) .btn.primary{color:#fff}
+.btn.primary{
+  background:var(--accent); border-color:var(--accent); color:#04120c; font-weight:600;
+  box-shadow:0 0 22px rgba(52,211,153,.28);
 }
-:root[data-theme="dark"] .btn.primary{color:#16161e}
+.btn.primary:hover{background:var(--accent-deep); color:#04120c; border-color:var(--accent-deep)}
 .getit-note{margin:0; font-size:var(--step--1); color:var(--muted); text-wrap:pretty}
 
-/* ── Botão de tema ─────────────────────────────────────────────────── */
-.theme-btn{
-  margin:10px 20px 0; padding:6px 10px; cursor:pointer;
-  font-family:var(--f-mono); font-size:.6875rem; text-align:left;
-  border:1px solid var(--line); border-radius:7px;
-  background:var(--bg); color:var(--fg-soft);
-  display:flex; align-items:center; gap:7px;
-}
-.theme-btn:hover{color:var(--accent); border-color:var(--accent)}
-@media (max-width:900px){.theme-btn{margin:10px 14px 0}}
 """
 
 # ── O bloco que aparece no topo da página ─────────────────────────────
@@ -135,30 +130,6 @@ EXTRA_JS = """
     });
   }
 
-  // ── Tema: segue o sistema até o leitor escolher ──
-  var root = document.documentElement;
-  var tbtn = document.getElementById('theme');
-  if(!tbtn) return;
-  var stored = null;
-  try { stored = localStorage.getItem('theme'); } catch(e){}
-  if(stored === 'dark' || stored === 'light') root.setAttribute('data-theme', stored);
-
-  var label = function(){
-    var explicit = root.getAttribute('data-theme');
-    var dark = explicit ? explicit === 'dark'
-             : window.matchMedia('(prefers-color-scheme: dark)').matches;
-    tbtn.textContent = dark ? '☀  tema claro' : '☾  tema escuro';
-  };
-  label();
-  tbtn.addEventListener('click', function(){
-    var explicit = root.getAttribute('data-theme');
-    var dark = explicit ? explicit === 'dark'
-             : window.matchMedia('(prefers-color-scheme: dark)').matches;
-    var next = dark ? 'light' : 'dark';
-    root.setAttribute('data-theme', next);
-    try { localStorage.setItem('theme', next); } catch(e){}
-    label();
-  });
 })();
 """
 
@@ -193,18 +164,6 @@ def main() -> int:
         return 1
     body = body.replace(anchor, "</div>\n" + GETIT + "  </div>\n</header>", 1)
 
-    # Botão de tema no topo do menu lateral.
-    rail_anchor = '<div class="who">manual de bordo</div>\n  </div>'
-    if rail_anchor not in body:
-        print("erro: não achei o cabeçalho do menu lateral", file=sys.stderr)
-        return 1
-    body = body.replace(
-        rail_anchor,
-        '<div class="who">manual de bordo</div>\n  </div>\n'
-        '  <button class="theme-btn" id="theme" type="button">tema</button>',
-        1,
-    )
-
     # Os scripts extras entram no fim do último <script> existente.
     tail = "</script>"
     last = body.rfind(tail)
@@ -226,7 +185,8 @@ def main() -> int:
 <meta property="og:description" content="{DESCRIPTION}">
 <meta property="og:url" content="{PAGES_URL}">
 <meta name="twitter:card" content="summary">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>⌨️</text></svg>">
+<link rel="icon" type="image/png" href="assets/git-hydra-64.png">
+<meta property="og:image" content="{PAGES_URL}assets/git-hydra.png">
 {head}
 </head>
 <body>

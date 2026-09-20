@@ -11,45 +11,47 @@
 <meta property="og:description" content="Config de Neovim para Rust: rust-analyzer, debugger, IA integrada e um manual completo — da gramática do Vim às receitas do dia a dia.">
 <meta property="og:url" content="https://marcelofullstack.github.io/nvim-rust/">
 <meta name="twitter:card" content="summary">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>⌨️</text></svg>">
+<link rel="icon" type="image/png" href="assets/git-hydra-64.png">
+<meta property="og:image" content="https://marcelofullstack.github.io/nvim-rust/assets/git-hydra.png">
 <title>Manual do Neovim Rust</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── Tokens: paleta Tokyo Night (Day = claro, Night = escuro) ───────
-   A mesma paleta que está rodando no editor. Light primeiro. */
+/* ── Tokens: paleta Git Hydra ──────────────────────────────────────
+   Dark-only por decisão: a identidade do Hydra é um preto esverdeado com
+   neon emerald/cyan/purple. Um modo claro desmontaria isso, então a página
+   pinta o próprio fundo e não depende do tema de host nenhum. */
 :root{
-  --bg:#e1e2e7; --surface:#d9dae3; --raised:#cfd2e0; --line:#b7bcd4;
-  --fg:#2c3557; --fg-soft:#4d5a91; --muted:#767d9e;
-  --accent:#2e7de9; --accent-soft:#2e7de91f;
-  --purple:#8c4ce0; --green:#4a6b2a; --red:#e01046; --orange:#a15200; --cyan:#00637f;
-  --shadow:0 1px 2px #2c35570f, 0 8px 24px #2c355714;
-  --kbd-shadow:inset 0 -2px 0 #b7bcd4;
+  --bg:#06090e;
+  --surface:#0d131c;
+  --raised:#121b28;
+  --line:rgba(255,255,255,.08);
+  --line-strong:rgba(255,255,255,.14);
+  --glow-line:rgba(52,211,153,.35);
 
-  --f-sans:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
-  --f-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --fg:#f8fafc;
+  --fg-soft:#94a3b8;
+  --muted:#64748b;
+
+  --accent:#34d399;            /* emerald-400 — o neon principal */
+  --accent-deep:#10b981;
+  --accent-soft:rgba(52,211,153,.10);
+  --cyan:#22d3ee;
+  --purple:#a78bfa;
+  --green:#10b981;
+  --orange:#fbbf24;
+  --red:#fb7185;
+
+  --shadow:0 1px 2px rgba(0,0,0,.6), 0 12px 32px rgba(0,0,0,.5);
+  --glow:0 0 22px rgba(52,211,153,.16);
+  --kbd-shadow:inset 0 -2px 0 rgba(0,0,0,.55);
+
+  --f-sans:"Plus Jakarta Sans",system-ui,-apple-system,sans-serif;
+  --f-mono:"Fira Code",ui-monospace,"SF Mono",Menlo,monospace;
 
   --step--1:.8125rem; --step-0:.9688rem; --step-1:1.125rem;
-  --step-2:1.375rem; --step-3:1.75rem; --step-4:2.375rem;
-}
-@media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]){
-    --bg:#1a1b26; --surface:#16161e; --raised:#1f2335; --line:#2b3050;
-    --fg:#c0caf5; --fg-soft:#a9b1d6; --muted:#6d76a0;
-    --accent:#7aa2f7; --accent-soft:#7aa2f71f;
-    --purple:#bb9af7; --green:#9ece6a; --red:#f7768e; --orange:#ff9e64; --cyan:#7dcfff;
-    --shadow:0 1px 2px #00000040, 0 8px 24px #00000040;
-    --kbd-shadow:inset 0 -2px 0 #11121b;
-  }
-}
-:root[data-theme="dark"]{
-  --bg:#1a1b26; --surface:#16161e; --raised:#1f2335; --line:#2b3050;
-  --fg:#c0caf5; --fg-soft:#a9b1d6; --muted:#6d76a0;
-  --accent:#7aa2f7; --accent-soft:#7aa2f71f;
-  --purple:#bb9af7; --green:#9ece6a; --red:#f7768e; --orange:#ff9e64; --cyan:#7dcfff;
-  --shadow:0 1px 2px #00000040, 0 8px 24px #00000040;
-  --kbd-shadow:inset 0 -2px 0 #11121b;
+  --step-2:1.375rem; --step-3:1.75rem; --step-4:2.5rem;
 }
 
 *{box-sizing:border-box}
@@ -57,6 +59,13 @@ body{
   background:var(--bg); color:var(--fg);
   font-family:var(--f-sans); font-size:var(--step-0); line-height:1.65;
   -webkit-font-smoothing:antialiased;
+}
+/* brilho ambiente fixo — emerald no alto, violeta embaixo à esquerda */
+body::before{
+  content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
+  background:
+    radial-gradient(760px 420px at 68% -6%, rgba(16,185,129,.14), transparent 62%),
+    radial-gradient(620px 420px at -8% 108%, rgba(139,92,246,.12), transparent 60%);
 }
 :focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:3px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
@@ -68,10 +77,16 @@ body{
   background:var(--surface); border-right:1px solid var(--line);
   padding:22px 0 40px; display:flex; flex-direction:column; gap:2px;
 }
-.rail-head{padding:0 20px 16px; display:flex; flex-direction:column; gap:3px}
+.rail-head{padding:0 20px 16px; display:flex; align-items:center; gap:11px}
+.rail-head img{
+  width:30px; height:30px; border-radius:8px; flex:none;
+  box-shadow:0 0 16px rgba(52,211,153,.28);
+}
+.rail-head .txt{display:flex; flex-direction:column; gap:2px; min-width:0}
 .rail-head .mark{
   font-family:var(--f-mono); font-size:.6875rem; font-weight:600;
   letter-spacing:.14em; text-transform:uppercase; color:var(--accent);
+  text-shadow:0 0 14px rgba(52,211,153,.45);
 }
 .rail-head .who{font-size:var(--step--1); color:var(--muted)}
 .rail a{
@@ -79,8 +94,11 @@ body{
   padding:5px 20px; color:var(--fg-soft); text-decoration:none;
   font-size:var(--step--1); border-left:2px solid transparent;
 }
-.rail a:hover{color:var(--fg); background:var(--accent-soft)}
-.rail a.on{color:var(--accent); border-left-color:var(--accent); background:var(--accent-soft); font-weight:500}
+.rail a:hover{color:var(--fg); background:rgba(255,255,255,.04)}
+.rail a.on{
+  color:var(--accent); border-left-color:var(--accent);
+  background:var(--accent-soft); font-weight:600;
+}
 .rail a .n{font-family:var(--f-mono); font-size:.6875rem; color:var(--muted); min-width:1.3em}
 .rail .div{
   margin:14px 20px 6px; font-family:var(--f-mono); font-size:.625rem;
@@ -93,12 +111,30 @@ main{padding:0 0 100px; min-width:0}
 
 /* ── Hero ──────────────────────────────────────────────── */
 .hero{
-  border-bottom:1px solid var(--line); padding:54px 0 38px; margin-bottom:8px;
-  background:linear-gradient(180deg,var(--accent-soft),transparent);
+  border-bottom:1px solid var(--line); padding:52px 0 40px; margin-bottom:8px;
+  position:relative; overflow:hidden;
 }
+.hero::after{
+  content:""; position:absolute; left:0; right:0; bottom:-1px; height:1px;
+  background:linear-gradient(90deg,transparent,var(--accent),var(--purple),transparent);
+  opacity:.5;
+}
+.hero-mark{display:flex; align-items:center; gap:16px; margin-bottom:20px}
+.hero-mark img{
+  width:64px; height:64px; border-radius:15px; flex:none;
+  box-shadow:0 0 34px rgba(52,211,153,.3), 0 0 68px rgba(139,92,246,.16);
+}
+.hero-mark .kicker{
+  font-family:var(--f-mono); font-size:.6875rem; font-weight:600;
+  letter-spacing:.2em; text-transform:uppercase; color:var(--accent);
+}
+.hero-mark .kicker b{color:var(--purple); font-weight:600}
 .hero h1{
-  font-size:var(--step-4); line-height:1.1; font-weight:700; letter-spacing:-.022em;
-  margin:0 0 12px; text-wrap:balance;
+  font-size:var(--step-4); line-height:1.08; font-weight:800; letter-spacing:-.03em;
+  margin:0 0 14px; text-wrap:balance;
+  background:linear-gradient(105deg,var(--fg) 24%,var(--accent) 58%,var(--cyan) 78%,var(--purple));
+  -webkit-background-clip:text; background-clip:text;
+  -webkit-text-fill-color:transparent; color:var(--accent);
 }
 .hero .sub{font-size:var(--step-1); color:var(--fg-soft); margin:0; max-width:56ch; text-wrap:pretty}
 .statline{
@@ -106,8 +142,8 @@ main{padding:0 0 100px; min-width:0}
   font-family:var(--f-mono); font-size:.75rem;
 }
 .statline span{
-  padding:3px 9px; border:1px solid var(--line); border-radius:999px;
-  color:var(--fg-soft); background:var(--bg);
+  padding:4px 11px; border:1px solid var(--line); border-radius:999px;
+  color:var(--fg-soft); background:var(--surface);
 }
 .statline span b{color:var(--accent); font-weight:600}
 
@@ -118,7 +154,11 @@ section{padding-top:52px; scroll-margin-top:12px}
   letter-spacing:.15em; text-transform:uppercase; color:var(--accent);
   margin:0 0 6px; display:flex; align-items:center; gap:8px;
 }
-.eyebrow::after{content:""; flex:1; height:1px; background:var(--line)}
+.eyebrow{text-shadow:0 0 16px rgba(52,211,153,.35)}
+.eyebrow::after{
+  content:""; flex:1; height:1px;
+  background:linear-gradient(90deg,var(--glow-line),transparent);
+}
 h2{font-size:var(--step-3); font-weight:600; letter-spacing:-.018em; margin:0 0 6px; line-height:1.2; text-wrap:balance}
 h3{font-size:var(--step-1); font-weight:600; margin:30px 0 8px; letter-spacing:-.01em}
 h4{font-size:var(--step-0); font-weight:600; margin:22px 0 6px; color:var(--fg)}
@@ -134,11 +174,14 @@ hr{border:0; border-top:1px solid var(--line); margin:34px 0}
 kbd{
   font-family:var(--f-mono); font-size:.8125em; font-weight:500;
   background:var(--raised); color:var(--fg);
-  border:1px solid var(--line); border-radius:5px;
+  border:1px solid var(--line-strong); border-radius:5px;
   padding:1px 6px; box-shadow:var(--kbd-shadow); white-space:nowrap;
   display:inline-block; line-height:1.5;
 }
-kbd.lead{color:var(--accent); border-color:var(--accent); background:var(--accent-soft)}
+kbd.lead{
+  color:var(--accent); border-color:var(--glow-line); background:var(--accent-soft);
+  box-shadow:var(--kbd-shadow), 0 0 12px rgba(52,211,153,.18);
+}
 code{
   font-family:var(--f-mono); font-size:.86em;
   background:var(--raised); padding:1px 5px; border-radius:4px; color:var(--cyan);
@@ -149,9 +192,9 @@ pre{
   font-family:var(--f-mono); font-size:var(--step--1); line-height:1.6; color:var(--fg-soft);
 }
 pre code{background:none; padding:0; color:inherit; font-size:1em}
-pre .c{color:var(--muted)}
+pre .c{color:var(--muted); font-style:italic}
 pre .k{color:var(--purple)}
-pre .s{color:var(--green)}
+pre .s{color:var(--accent)}
 
 /* ── Tabelas de atalho ─────────────────────────────────── */
 .kt-wrap{overflow-x:auto; margin:0 0 18px; border:1px solid var(--line); border-radius:10px; background:var(--surface)}
@@ -164,7 +207,7 @@ table.kt caption{
 table.kt td{padding:7px 15px; border-bottom:1px solid var(--line); vertical-align:baseline}
 table.kt tr:last-child td{border-bottom:0}
 table.kt td:first-child{width:1%; white-space:nowrap; padding-right:20px}
-table.kt tr:hover td{background:var(--accent-soft)}
+table.kt tr:hover td{background:rgba(52,211,153,.06)}
 .kt .note{color:var(--muted)}
 
 /* ── Painéis ───────────────────────────────────────────── */
@@ -177,9 +220,12 @@ table.kt tr:hover td{background:var(--accent-soft)}
   font-family:var(--f-mono); font-size:.6875rem; letter-spacing:.13em;
   text-transform:uppercase; color:var(--muted); display:flex; gap:8px; align-items:center;
 }
-.panel.tip{border-left:3px solid var(--green)} .panel.tip .ph{color:var(--green)}
-.panel.warn{border-left:3px solid var(--orange)} .panel.warn .ph{color:var(--orange)}
-.panel.key{border-left:3px solid var(--accent)} .panel.key .ph{color:var(--accent)}
+.panel.tip{border-left:2px solid var(--green); box-shadow:-10px 0 22px -16px var(--green)}
+.panel.tip .ph{color:var(--green)}
+.panel.warn{border-left:2px solid var(--orange); box-shadow:-10px 0 22px -16px var(--orange)}
+.panel.warn .ph{color:var(--orange)}
+.panel.key{border-left:2px solid var(--accent); box-shadow:-10px 0 22px -16px var(--accent)}
+.panel.key .ph{color:var(--accent)}
 
 /* ── Modos ─────────────────────────────────────────────── */
 .modes{display:grid; grid-template-columns:repeat(auto-fit,minmax(168px,1fr)); gap:10px; margin:0 0 20px}
@@ -226,10 +272,13 @@ tr[hidden]{display:none}
 
 /* ── Autor ─────────────────────────────────────────────── */
 .author{
-  margin-top:64px; padding:24px 26px;
-  border:1px solid var(--line); border-top:3px solid var(--accent);
-  border-radius:12px; background:var(--surface);
-  display:flex; flex-direction:column; gap:2px;
+  margin-top:64px; padding:26px; position:relative;
+  border:1px solid var(--line); border-radius:12px; background:var(--surface);
+  display:flex; flex-direction:column; gap:2px; overflow:hidden;
+}
+.author::before{
+  content:""; position:absolute; top:0; left:0; right:0; height:2px;
+  background:linear-gradient(90deg,var(--accent),var(--cyan),var(--purple));
 }
 .author .role{
   font-family:var(--f-mono); font-size:.625rem; font-weight:600;
@@ -247,8 +296,8 @@ tr[hidden]{display:none}
   font-size:var(--step--1); color:var(--fg-soft); max-width:62ch; text-wrap:pretty;
 }
 .author .free strong{color:var(--green)}
+.author .links{display:flex; flex-wrap:wrap; gap:8px; margin-top:16px}
 .author .gh{
-  margin-top:14px; align-self:flex-start;
   font-family:var(--f-mono); font-size:var(--step--1); text-decoration:none;
   padding:7px 14px; border-radius:7px;
   border:1px solid var(--line); color:var(--fg); background:var(--bg);
@@ -270,22 +319,27 @@ footer{border-top:1px solid var(--line); margin-top:60px; padding-top:22px; colo
 }
 
 /* ── Reset (a versão hospedada não herda esqueleto de nenhum host) ── */
-html{color-scheme:light dark}
+html{color-scheme:dark}
 body{margin:0}
 img{max-width:100%}
 [hidden]{display:none!important}
 
 /* ── Bloco de instalação, no topo ──────────────────────────────────── */
 .getit{
-  margin-top:26px; padding:18px 20px;
-  border:1px solid var(--line); border-radius:12px;
-  background:var(--surface); box-shadow:var(--shadow);
+  margin-top:26px; padding:18px 20px; position:relative; overflow:hidden;
+  border:1px solid var(--glow-line); border-radius:12px;
+  background:var(--surface); box-shadow:var(--shadow), var(--glow);
   display:flex; flex-direction:column; gap:12px; max-width:62ch;
+}
+.getit::before{
+  content:""; position:absolute; top:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg,transparent,var(--accent),transparent);
 }
 .getit-head{
   font-family:var(--f-mono); font-size:.6875rem; font-weight:600;
   letter-spacing:.14em; text-transform:uppercase; color:var(--accent);
   display:flex; align-items:center; justify-content:space-between; gap:12px;
+  text-shadow:0 0 16px rgba(52,211,153,.4);
 }
 .getit-cmd{margin:0}
 .getit-cmd pre{margin:0; background:var(--bg)}
@@ -305,25 +359,13 @@ img{max-width:100%}
   display:inline-flex; align-items:center; gap:7px;
 }
 .btn:hover{border-color:var(--accent); color:var(--accent)}
-.btn.primary{background:var(--accent); border-color:var(--accent); color:#fff}
-.btn.primary:hover{opacity:.9; color:#fff}
-:root:not([data-theme="light"]) .btn.primary{color:#16161e}
-@media (prefers-color-scheme:light){
-  :root:not([data-theme="dark"]) .btn.primary{color:#fff}
+.btn.primary{
+  background:var(--accent); border-color:var(--accent); color:#04120c; font-weight:600;
+  box-shadow:0 0 22px rgba(52,211,153,.28);
 }
-:root[data-theme="dark"] .btn.primary{color:#16161e}
+.btn.primary:hover{background:var(--accent-deep); color:#04120c; border-color:var(--accent-deep)}
 .getit-note{margin:0; font-size:var(--step--1); color:var(--muted); text-wrap:pretty}
 
-/* ── Botão de tema ─────────────────────────────────────────────────── */
-.theme-btn{
-  margin:10px 20px 0; padding:6px 10px; cursor:pointer;
-  font-family:var(--f-mono); font-size:.6875rem; text-align:left;
-  border:1px solid var(--line); border-radius:7px;
-  background:var(--bg); color:var(--fg-soft);
-  display:flex; align-items:center; gap:7px;
-}
-.theme-btn:hover{color:var(--accent); border-color:var(--accent)}
-@media (max-width:900px){.theme-btn{margin:10px 14px 0}}
 </style>
 </head>
 <body>
@@ -331,10 +373,12 @@ img{max-width:100%}
 
 <nav class="rail" aria-label="Sumário">
   <div class="rail-head">
-    <div class="mark">nvim · rust · ai</div>
-    <div class="who">manual de bordo</div>
+    <img src="assets/git-hydra.png" alt="" width="30" height="30">
+    <div class="txt">
+      <div class="mark">nvim · rust · ai</div>
+      <div class="who">manual de bordo</div>
+    </div>
   </div>
-  <button class="theme-btn" id="theme" type="button">tema</button>
 
   <div class="div">Setup</div>
   <a href="#setup"><span class="n">·</span>O que foi instalado</a>
@@ -367,6 +411,10 @@ img{max-width:100%}
 
 <header class="hero">
   <div class="wrap">
+    <div class="hero-mark">
+      <img src="assets/git-hydra.png" alt="Git Hydra" width="64" height="64">
+      <div class="kicker">rust <b>·</b> neovim <b>·</b> ia</div>
+    </div>
     <h1>Manual do Neovim Rust</h1>
     <p class="sub">Sua config, explicada de baixo pra cima — da gramática do Vim até expandir uma macro do <code>serde</code> e mandar o erro pro Claude sem sair do editor.</p>
     <div class="statline">
@@ -1794,7 +1842,10 @@ cd ~/nvim-rust &amp;&amp; git add -A &amp;&amp; git commit -m <span class="s">"a
   <p class="free">Esta config e este manual são <strong>gratuitos e abertos</strong>, feitos para
   ajudar a comunidade. Use, copie, modifique e redistribua à vontade — sem cobrança, sem cadastro,
   sem pegadinha. Se te ajudou, passe adiante.</p>
-  <a class="gh" href="https://github.com/MarceloFullStack">github.com/MarceloFullStack</a>
+  <div class="links">
+    <a class="gh" href="https://github.com/MarceloFullStack">github.com/MarceloFullStack</a>
+    <a class="gh" href="https://marcelofullstack.github.io/git-hydra-app/">Git Hydra — cliente git em Rust</a>
+  </div>
 </div>
 
 <footer>
@@ -1881,30 +1932,6 @@ cd ~/nvim-rust &amp;&amp; git add -A &amp;&amp; git commit -m <span class="s">"a
     });
   }
 
-  // ── Tema: segue o sistema até o leitor escolher ──
-  var root = document.documentElement;
-  var tbtn = document.getElementById('theme');
-  if(!tbtn) return;
-  var stored = null;
-  try { stored = localStorage.getItem('theme'); } catch(e){}
-  if(stored === 'dark' || stored === 'light') root.setAttribute('data-theme', stored);
-
-  var label = function(){
-    var explicit = root.getAttribute('data-theme');
-    var dark = explicit ? explicit === 'dark'
-             : window.matchMedia('(prefers-color-scheme: dark)').matches;
-    tbtn.textContent = dark ? '☀  tema claro' : '☾  tema escuro';
-  };
-  label();
-  tbtn.addEventListener('click', function(){
-    var explicit = root.getAttribute('data-theme');
-    var dark = explicit ? explicit === 'dark'
-             : window.matchMedia('(prefers-color-scheme: dark)').matches;
-    var next = dark ? 'light' : 'dark';
-    root.setAttribute('data-theme', next);
-    try { localStorage.setItem('theme', next); } catch(e){}
-    label();
-  });
 })();
 </script>
 </body>
