@@ -255,6 +255,18 @@ table.kt tr:hover td{background:rgba(52,211,153,.06)}
 .hitcount{font-family:var(--f-mono); font-size:.75rem; color:var(--muted); font-variant-numeric:tabular-nums}
 tr[hidden]{display:none}
 
+/* ── Screenshot ──────────────────────────────────────── */
+.shot{margin:0 0 30px}
+.shot img{
+  display:block; width:100%; height:auto; border-radius:12px;
+  border:1px solid var(--line);
+  box-shadow:0 24px 60px rgba(0,0,0,.6), 0 0 60px rgba(52,211,153,.10);
+}
+.shot figcaption{
+  margin-top:10px; font-family:var(--f-mono); font-size:.6875rem;
+  letter-spacing:.06em; color:var(--muted); text-align:center;
+}
+
 /* ── Autor ─────────────────────────────────────────────── */
 .author{
   margin-top:64px; padding:26px; position:relative;
@@ -318,6 +330,7 @@ footer{border-top:1px solid var(--line); margin-top:60px; padding-top:22px; colo
   <div class="div">Setup</div>
   <a href="#setup"><span class="n">·</span>O que foi instalado</a>
   <a href="#primeiro"><span class="n">·</span>Primeiro boot</a>
+  <a href="#vindo-de-ide"><span class="n">·</span>Vindo do VSCode</a>
 
   <div class="div">Trilha de aprendizado</div>
   <a href="#gramatica"><span class="n">1</span>A gramática do Vim</a>
@@ -370,6 +383,12 @@ footer{border-top:1px solid var(--line); margin-top:60px; padding-top:22px; colo
   <p class="eyebrow">Setup</p>
   <h2>O que foi instalado</h2>
   <p class="lede">Nenhum "distro" pronta (LazyVim, NvChad). Essa config é sua, cada linha é legível e você pode mudar qualquer coisa sem lutar contra abstrações de terceiros.</p>
+
+  <figure class="shot">
+    <img src="assets/screenshot.png" width="1700" height="900"
+         alt="Neovim com a árvore de arquivos à esquerda e um arquivo Rust aberto, com realce de sintaxe na paleta do Git Hydra: palavras-chave em violeta, tipos em esmeralda, funções em ciano.">
+    <figcaption>árvore lateral · code lens do rust-analyzer · inlay hints · statusline por modo</figcaption>
+  </figure>
 
   <h3>Estrutura dos arquivos</h3>
 <pre><code>~/.config/nvim/
@@ -456,6 +475,63 @@ footer{border-top:1px solid var(--line); margin-top:60px; padding-top:22px; colo
     <tr><td><kbd class="lead">Espaço</kbd><kbd>s</kbd><kbd>k</kbd></td><td>Busca fuzzy em <em>todos</em> os atalhos ativos, com descrição. Digite "rust", "git", "debug".</td></tr>
     <tr><td><kbd>:</kbd><code>help</code> <kbd>assunto</kbd></td><td>A documentação do Vim é excelente e offline. <code>:help text-objects</code>, <code>:help registers</code>.</td></tr>
   </table>
+  </div>
+</section>
+
+<!-- ══ VINDO DE IDE ═══════════════════════════════════ -->
+<section id="vindo-de-ide">
+  <p class="eyebrow">Setup</p>
+  <h2>Vindo do VSCode</h2>
+  <p class="lede">A config traz uma camada de atalhos com as teclas que você já tem no dedo. Os comandos do Vim continuam todos valendo — isto é uma ponte, não uma troca.</p>
+
+  <div class="panel key">
+    <div class="ph">Antes de tudo: o que é <kbd class="lead">Espaço</kbd></div>
+    <p>É literalmente a <strong>barra de espaço</strong>. Em modo normal (quando você não está digitando texto), ela vira o "menu iniciar" do editor.</p>
+    <p><kbd class="lead">Espaço</kbd><kbd>f</kbd><kbd>e</kbd> significa: aperte a barra de espaço, solte, aperte <kbd>f</kbd>, solte, aperte <kbd>e</kbd>. <strong>Três toques em sequência</strong>, não ao mesmo tempo.</p>
+    <p>E você não precisa decorar: aperte a barra de espaço e <strong>espere meio segundo</strong>. Um menu aparece com tudo que existe a partir dali, e vai se aprofundando conforme você digita.</p>
+  </div>
+
+  <h3>As teclas que você já conhece</h3>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd>Ctrl</kbd>+<kbd>b</kbd></td><td><strong>Abrir/fechar a árvore de arquivos</strong> na lateral</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>p</kbd></td><td>Buscar arquivo pelo nome</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>p</kbd></td><td>Paleta de comandos</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>f</kbd></td><td>Buscar no projeto inteiro</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>s</kbd></td><td>Salvar (funciona até no meio da digitação)</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>/</kbd></td><td>Comentar a linha ou a seleção</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>`</kbd></td><td>Terminal</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>a</kbd></td><td>Selecionar o arquivo inteiro</td></tr>
+    <tr><td><kbd>F2</kbd></td><td>Renomear símbolo</td></tr>
+    <tr><td><kbd>F12</kbd></td><td>Ir pra definição</td></tr>
+    <tr><td><kbd>Alt</kbd>+<kbd>←</kbd> / <kbd>Alt</kbd>+<kbd>→</kbd></td><td>Voltar / avançar (como o histórico do navegador)</td></tr>
+    <tr><td><kbd>Alt</kbd>+<kbd>↑</kbd> / <kbd>Alt</kbd>+<kbd>↓</kbd></td><td>Mover a linha ou a seleção</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>w</kbd> <kbd>Ctrl</kbd>+<kbd>w</kbd></td><td>Fechar o arquivo atual (duas vezes, porque <kbd>Ctrl</kbd>+<kbd>w</kbd> sozinho é o prefixo de janelas do Vim)</td></tr>
+  </table>
+  </div>
+
+  <h3>Abrir uma pasta</h3>
+  <p>Igual a um editor gráfico — aponte o Neovim para o diretório:</p>
+<pre><code>cd ~/meu-projeto &amp;&amp; nvim .
+<span class="c"># ou direto:</span>
+nvim ~/meu-projeto</code></pre>
+  <p>A árvore abre sozinha na lateral e o diretório vira a raiz do projeto: buscas, grep e o <code>rust-analyzer</code> passam a trabalhar nesse escopo.</p>
+
+  <h3>Dentro da árvore</h3>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd>Enter</kbd></td><td>abre o arquivo (ou expande a pasta)</td></tr>
+    <tr><td><kbd>a</kbd></td><td>cria arquivo — terminando com <code>/</code>, cria uma pasta</td></tr>
+    <tr><td><kbd>d</kbd> / <kbd>r</kbd> / <kbd>c</kbd></td><td>apagar · renomear · copiar</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>v</kbd> / <kbd>Ctrl</kbd>+<kbd>s</kbd></td><td>abre em split vertical / horizontal</td></tr>
+    <tr><td><kbd>H</kbd></td><td>mostra/esconde os arquivos ocultos</td></tr>
+    <tr><td><kbd>Esc</kbd> ou <kbd>Ctrl</kbd>+<kbd>b</kbd></td><td>fecha a árvore</td></tr>
+  </table>
+  </div>
+
+  <div class="panel tip">
+    <div class="ph">Não quer essa camada?</div>
+    <p>Comente a linha <code>require("config.keymaps-ide")</code> em <code>lua/config/keymaps.lua</code> e ficam só os atalhos puros do Vim. Nada mais muda.</p>
   </div>
 </section>
 

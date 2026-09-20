@@ -86,6 +86,29 @@ vim.api.nvim_create_autocmd("BufEnter", {
   callback = function() vim.opt_local.formatoptions:remove({ "c", "r", "o" }) end,
 })
 
+-- Abriu o nvim apontando para uma PASTA (`nvim .` ou `nvim ~/projeto`)?
+-- Mostra a árvore de arquivos na esquerda, como um editor gráfico faria.
+vim.api.nvim_create_autocmd("VimEnter", {
+  group = augroup("open_dir_as_tree"),
+  once = true,
+  callback = function()
+    local arg = vim.fn.argv(0)
+    if type(arg) ~= "string" or arg == "" then return end
+    if vim.fn.isdirectory(arg) ~= 1 then return end
+
+    -- entra na pasta, para que buscas e grep fiquem no escopo certo
+    vim.cmd.cd(arg)
+    -- o buffer do diretório não serve para nada; descarta
+    local dir_buf = vim.api.nvim_get_current_buf()
+    vim.cmd.enew()
+    pcall(vim.api.nvim_buf_delete, dir_buf, { force = true })
+
+    vim.schedule(function()
+      Snacks.explorer()
+    end)
+  end,
+})
+
 -- fecha o nvim se o único buffer restante for o explorer
 vim.api.nvim_create_autocmd("BufEnter", {
   group = augroup("close_lone_explorer"),

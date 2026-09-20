@@ -125,6 +125,10 @@ vim.api.nvim_create_autocmd("User", {
   end,
 })
 
+-- ── Camada com cara de IDE (Ctrl+B, Ctrl+P, Ctrl+S...) ─────
+-- Comente a linha abaixo se quiser só os atalhos puros do Vim.
+require("config.keymaps-ide")
+
 -- ── Utilitários ────────────────────────────────────────────
 map("n", "<leader>L", "<cmd>Lazy<cr>", { desc = "Gerenciador de plugins" })
 map("n", "<leader>M", "<cmd>Mason<cr>", { desc = "Mason (LSP/tools)" })
