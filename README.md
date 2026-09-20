@@ -10,7 +10,7 @@ startup: 38 ms  ·  38 plugins  ·  Neovim 0.11+
 
 **[→ Leia o manual completo](https://marcelofullstack.github.io/nvim-rust/)** — da gramática do Vim às receitas do dia a dia, com cheatsheet buscável.
 
-![Neovim com a árvore de arquivos à esquerda e um arquivo Rust aberto, com realce de sintaxe na paleta do Git Hydra](docs/assets/screenshot.png)
+![Neovim aberto no código-fonte do Git Hydra, com a árvore de arquivos à esquerda e realce de sintaxe na paleta da marca](docs/assets/screenshot.png)
 
 ## Instalação
 

@@ -257,6 +257,12 @@ tr[hidden]{display:none}
 
 /* ── Screenshot ──────────────────────────────────────── */
 .shot{margin:0 0 30px}
+/* A partir de certa largura a figura escapa da coluna de texto: é a única
+   imagem da página e mostra o editor inteiro, então ganha o espaço extra.
+   O limite em ch acompanha a tipografia e nunca passa da área de conteúdo. */
+@media (min-width:1180px){
+  .shot{width:92ch; margin-left:50%; transform:translateX(-50%)}
+}
 .shot img{
   display:block; width:100%; height:auto; border-radius:12px;
   border:1px solid var(--line);
@@ -385,9 +391,9 @@ footer{border-top:1px solid var(--line); margin-top:60px; padding-top:22px; colo
   <p class="lede">Nenhum "distro" pronta (LazyVim, NvChad). Essa config é sua, cada linha é legível e você pode mudar qualquer coisa sem lutar contra abstrações de terceiros.</p>
 
   <figure class="shot">
-    <img src="assets/screenshot.png" width="1700" height="900"
-         alt="Neovim com a árvore de arquivos à esquerda e um arquivo Rust aberto, com realce de sintaxe na paleta do Git Hydra: palavras-chave em violeta, tipos em esmeralda, funções em ciano.">
-    <figcaption>árvore lateral · code lens do rust-analyzer · inlay hints · statusline por modo</figcaption>
+    <img src="assets/screenshot.png" width="1920" height="945"
+         alt="Neovim aberto no código-fonte do Git Hydra: árvore de arquivos à esquerda, um módulo Rust de animação no centro com realce de sintaxe na paleta da marca — palavras-chave em violeta, tipos em esmeralda, funções em ciano — e o rust-analyzer indexando o projeto na barra inferior.">
+    <figcaption>a config rodando de verdade, no código-fonte do Git Hydra</figcaption>
   </figure>
 
   <h3>Estrutura dos arquivos</h3>
