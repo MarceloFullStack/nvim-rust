@@ -8,6 +8,8 @@ Feita para quem programa Rust o dia inteiro e não quer sofrer: autocomplete que
 startup: 38 ms  ·  38 plugins  ·  Neovim 0.11+
 ```
 
+**[→ Leia o manual completo](https://marcelofullstack.github.io/nvim-rust/)** — da gramática do Vim às receitas do dia a dia, com cheatsheet buscável.
+
 ## Instalação
 
 ```bash
@@ -71,7 +73,7 @@ Esta config usa **um** plugin inline e **um** gerenciador de agentes — e esse 
 | `s` | flash — pular pra qualquer lugar visível |
 | `<leader>sk` | buscar entre todos os atalhos |
 
-O manual completo está em [`docs/manual.html`](docs/manual.html) — abra no navegador. Cobre desde a gramática do Vim até as receitas do dia a dia, com cheatsheet buscável.
+O manual completo está em **[marcelofullstack.github.io/nvim-rust](https://marcelofullstack.github.io/nvim-rust/)** (ou `docs/index.html`, que funciona offline). Cobre desde a gramática do Vim até as receitas do dia a dia, com cheatsheet buscável.
 
 ## Estrutura
 
@@ -121,6 +123,28 @@ Problemas comuns:
 | Autocomplete Rust não aparece | sem `Cargo.toml` na raiz o rust-analyzer não anexa; ou ainda está indexando |
 | `gd` não entra na std | falta `rustup component add rust-src` |
 | Plugin quebrou após update | `:Lazy` → `r` faz rollback |
+
+## Editar o manual
+
+A fonte é `docs/manual.html`. Depois de mexer nele, regenere a página publicada:
+
+```bash
+python3 tools/build-docs.py
+```
+
+O script embrulha o manual num documento HTML completo e acrescenta o que só a versão hospedada precisa: charset, viewport, metadados sociais, o bloco de instalação e o botão de tema.
+
+## Autor
+
+**Marcelo Guimarães** — autor e criador do projeto.
+
+Sênior Full Stack, com raízes sólidas na engenharia de software. Trabalha com arquitetura de sistemas, inteligência artificial e computação de alta performance em Rust — partindo do princípio de que a experiência vale mais que a ferramenta da vez.
+
+ADS · Gestão Comercial · Pós em IA/ML · Rust & WGPU
+
+[github.com/MarceloFullStack](https://github.com/MarceloFullStack)
+
+Esta config e este manual são **gratuitos e abertos**, feitos para ajudar a comunidade. Use, copie, modifique e redistribua à vontade — sem cobrança, sem cadastro, sem pegadinha. Se te ajudou, passe adiante.
 
 ## Licença
 

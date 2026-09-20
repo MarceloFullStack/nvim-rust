@@ -1,3 +1,17 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Config de Neovim para Rust: rust-analyzer, debugger, IA integrada e um manual completo — da gramática do Vim às receitas do dia a dia.">
+<meta name="color-scheme" content="light dark">
+<link rel="canonical" href="https://marcelofullstack.github.io/nvim-rust/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Manual do Neovim Rust">
+<meta property="og:description" content="Config de Neovim para Rust: rust-analyzer, debugger, IA integrada e um manual completo — da gramática do Vim às receitas do dia a dia.">
+<meta property="og:url" content="https://marcelofullstack.github.io/nvim-rust/">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>⌨️</text></svg>">
 <title>Manual do Neovim Rust</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -254,8 +268,65 @@ footer{border-top:1px solid var(--line); margin-top:60px; padding-top:22px; colo
   .rail a.on{border-left:0; border-bottom-color:var(--accent)}
   .wrap,.wide{padding:0 22px}
 }
-</style>
 
+/* ── Reset (a versão hospedada não herda esqueleto de nenhum host) ── */
+html{color-scheme:light dark}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+
+/* ── Bloco de instalação, no topo ──────────────────────────────────── */
+.getit{
+  margin-top:26px; padding:18px 20px;
+  border:1px solid var(--line); border-radius:12px;
+  background:var(--surface); box-shadow:var(--shadow);
+  display:flex; flex-direction:column; gap:12px; max-width:62ch;
+}
+.getit-head{
+  font-family:var(--f-mono); font-size:.6875rem; font-weight:600;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--accent);
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+}
+.getit-cmd{margin:0}
+.getit-cmd pre{margin:0; background:var(--bg)}
+.copy{
+  font-family:var(--f-mono); font-size:.6875rem; letter-spacing:.06em;
+  padding:4px 10px; border-radius:6px; cursor:pointer; flex:none;
+  border:1px solid var(--line); background:var(--surface); color:var(--fg-soft);
+  text-transform:none; font-weight:500;
+}
+.copy:hover{color:var(--accent); border-color:var(--accent)}
+.copy.done{color:var(--green); border-color:var(--green)}
+.getit-links{display:flex; flex-wrap:wrap; gap:8px}
+.btn{
+  font-size:var(--step--1); font-weight:500; text-decoration:none;
+  padding:7px 14px; border-radius:7px;
+  border:1px solid var(--line); color:var(--fg); background:var(--bg);
+  display:inline-flex; align-items:center; gap:7px;
+}
+.btn:hover{border-color:var(--accent); color:var(--accent)}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:#fff}
+.btn.primary:hover{opacity:.9; color:#fff}
+:root:not([data-theme="light"]) .btn.primary{color:#16161e}
+@media (prefers-color-scheme:light){
+  :root:not([data-theme="dark"]) .btn.primary{color:#fff}
+}
+:root[data-theme="dark"] .btn.primary{color:#16161e}
+.getit-note{margin:0; font-size:var(--step--1); color:var(--muted); text-wrap:pretty}
+
+/* ── Botão de tema ─────────────────────────────────────────────────── */
+.theme-btn{
+  margin:10px 20px 0; padding:6px 10px; cursor:pointer;
+  font-family:var(--f-mono); font-size:.6875rem; text-align:left;
+  border:1px solid var(--line); border-radius:7px;
+  background:var(--bg); color:var(--fg-soft);
+  display:flex; align-items:center; gap:7px;
+}
+.theme-btn:hover{color:var(--accent); border-color:var(--accent)}
+@media (max-width:900px){.theme-btn{margin:10px 14px 0}}
+</style>
+</head>
+<body>
 <div class="shell">
 
 <nav class="rail" aria-label="Sumário">
@@ -263,6 +334,7 @@ footer{border-top:1px solid var(--line); margin-top:60px; padding-top:22px; colo
     <div class="mark">nvim · rust · ai</div>
     <div class="who">manual de bordo</div>
   </div>
+  <button class="theme-btn" id="theme" type="button">tema</button>
 
   <div class="div">Setup</div>
   <a href="#setup"><span class="n">·</span>O que foi instalado</a>
@@ -304,6 +376,26 @@ footer{border-top:1px solid var(--line); margin-top:60px; padding-top:22px; colo
       <span><b>25</b> parsers treesitter</span>
       <span>tema <b>Tokyo Night</b></span>
       <span>leader = <b>espaço</b></span>
+    </div>
+
+    <div class="getit">
+      <div class="getit-head">
+        <span>Quer essa config na sua máquina?</span>
+        <button class="copy" id="copy" type="button">copiar</button>
+      </div>
+      <div class="getit-cmd">
+        <pre><code id="cmd">git clone https://github.com/MarceloFullStack/nvim-rust.git
+cd nvim-rust &amp;&amp; ./install.sh</code></pre>
+      </div>
+      <div class="getit-links">
+        <a class="btn primary" href="https://github.com/MarceloFullStack/nvim-rust">Ver no GitHub</a>
+        <a class="btn" href="https://github.com/MarceloFullStack/nvim-rust/archive/refs/heads/main.zip">Baixar .zip</a>
+        <a class="btn" href="#setup">O que vem dentro</a>
+      </div>
+      <p class="getit-note">O instalador resolve dependências do sistema, toolchain Rust via rustup,
+      Nerd Font, plugins, parsers do treesitter e ferramentas do Mason. Configs existentes viram
+      <code>.bak</code> — nada é apagado. Rode com <code>--dry-run</code> pra ver o que faria antes.
+      Arch, Debian/Ubuntu, Fedora, openSUSE e macOS.</p>
     </div>
   </div>
 </header>
@@ -1763,4 +1855,57 @@ cd ~/nvim-rust &amp;&amp; git add -A &amp;&amp; git commit -m <span class="s">"a
   }, { rootMargin: '0px 0px -75% 0px', threshold: 0 });
   Object.keys(map).forEach(function(id){ obs.observe(document.getElementById(id)); });
 })();
+
+(function(){
+  // ── Botão de copiar o comando ──
+  var btn = document.getElementById('copy');
+  var cmd = document.getElementById('cmd');
+  if(btn && cmd){
+    btn.addEventListener('click', function(){
+      var text = cmd.innerText;
+      var done = function(){
+        btn.textContent = 'copiado';
+        btn.classList.add('done');
+        setTimeout(function(){ btn.textContent = 'copiar'; btn.classList.remove('done'); }, 1600);
+      };
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(done, fallback);
+      } else { fallback(); }
+      function fallback(){
+        var ta = document.createElement('textarea');
+        ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); done(); } catch(e){}
+        document.body.removeChild(ta);
+      }
+    });
+  }
+
+  // ── Tema: segue o sistema até o leitor escolher ──
+  var root = document.documentElement;
+  var tbtn = document.getElementById('theme');
+  if(!tbtn) return;
+  var stored = null;
+  try { stored = localStorage.getItem('theme'); } catch(e){}
+  if(stored === 'dark' || stored === 'light') root.setAttribute('data-theme', stored);
+
+  var label = function(){
+    var explicit = root.getAttribute('data-theme');
+    var dark = explicit ? explicit === 'dark'
+             : window.matchMedia('(prefers-color-scheme: dark)').matches;
+    tbtn.textContent = dark ? '☀  tema claro' : '☾  tema escuro';
+  };
+  label();
+  tbtn.addEventListener('click', function(){
+    var explicit = root.getAttribute('data-theme');
+    var dark = explicit ? explicit === 'dark'
+             : window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var next = dark ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    try { localStorage.setItem('theme', next); } catch(e){}
+    label();
+  });
+})();
 </script>
+</body>
+</html>
