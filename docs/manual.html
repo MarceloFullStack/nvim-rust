@@ -1,0 +1,1694 @@
+<title>Manual do Neovim Rust</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* ── Tokens: paleta Tokyo Night (Day = claro, Night = escuro) ───────
+   A mesma paleta que está rodando no editor. Light primeiro. */
+:root{
+  --bg:#e1e2e7; --surface:#d9dae3; --raised:#cfd2e0; --line:#b7bcd4;
+  --fg:#2c3557; --fg-soft:#4d5a91; --muted:#767d9e;
+  --accent:#2e7de9; --accent-soft:#2e7de91f;
+  --purple:#8c4ce0; --green:#4a6b2a; --red:#e01046; --orange:#a15200; --cyan:#00637f;
+  --shadow:0 1px 2px #2c35570f, 0 8px 24px #2c355714;
+  --kbd-shadow:inset 0 -2px 0 #b7bcd4;
+
+  --f-sans:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+
+  --step--1:.8125rem; --step-0:.9688rem; --step-1:1.125rem;
+  --step-2:1.375rem; --step-3:1.75rem; --step-4:2.375rem;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#1a1b26; --surface:#16161e; --raised:#1f2335; --line:#2b3050;
+    --fg:#c0caf5; --fg-soft:#a9b1d6; --muted:#6d76a0;
+    --accent:#7aa2f7; --accent-soft:#7aa2f71f;
+    --purple:#bb9af7; --green:#9ece6a; --red:#f7768e; --orange:#ff9e64; --cyan:#7dcfff;
+    --shadow:0 1px 2px #00000040, 0 8px 24px #00000040;
+    --kbd-shadow:inset 0 -2px 0 #11121b;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1a1b26; --surface:#16161e; --raised:#1f2335; --line:#2b3050;
+  --fg:#c0caf5; --fg-soft:#a9b1d6; --muted:#6d76a0;
+  --accent:#7aa2f7; --accent-soft:#7aa2f71f;
+  --purple:#bb9af7; --green:#9ece6a; --red:#f7768e; --orange:#ff9e64; --cyan:#7dcfff;
+  --shadow:0 1px 2px #00000040, 0 8px 24px #00000040;
+  --kbd-shadow:inset 0 -2px 0 #11121b;
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--bg); color:var(--fg);
+  font-family:var(--f-sans); font-size:var(--step-0); line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:3px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* ── Shell ─────────────────────────────────────────────── */
+.shell{display:grid; grid-template-columns:250px minmax(0,1fr); gap:0; min-height:100vh}
+.rail{
+  position:sticky; top:0; align-self:start; height:100vh; overflow-y:auto;
+  background:var(--surface); border-right:1px solid var(--line);
+  padding:22px 0 40px; display:flex; flex-direction:column; gap:2px;
+}
+.rail-head{padding:0 20px 16px; display:flex; flex-direction:column; gap:3px}
+.rail-head .mark{
+  font-family:var(--f-mono); font-size:.6875rem; font-weight:600;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--accent);
+}
+.rail-head .who{font-size:var(--step--1); color:var(--muted)}
+.rail a{
+  display:flex; gap:9px; align-items:baseline;
+  padding:5px 20px; color:var(--fg-soft); text-decoration:none;
+  font-size:var(--step--1); border-left:2px solid transparent;
+}
+.rail a:hover{color:var(--fg); background:var(--accent-soft)}
+.rail a.on{color:var(--accent); border-left-color:var(--accent); background:var(--accent-soft); font-weight:500}
+.rail a .n{font-family:var(--f-mono); font-size:.6875rem; color:var(--muted); min-width:1.3em}
+.rail .div{
+  margin:14px 20px 6px; font-family:var(--f-mono); font-size:.625rem;
+  letter-spacing:.16em; text-transform:uppercase; color:var(--muted);
+}
+
+main{padding:0 0 100px; min-width:0}
+.wrap{max-width:74ch; padding:0 44px; margin:0 auto}
+.wide{max-width:104ch; padding:0 44px; margin:0 auto}
+
+/* ── Hero ──────────────────────────────────────────────── */
+.hero{
+  border-bottom:1px solid var(--line); padding:54px 0 38px; margin-bottom:8px;
+  background:linear-gradient(180deg,var(--accent-soft),transparent);
+}
+.hero h1{
+  font-size:var(--step-4); line-height:1.1; font-weight:700; letter-spacing:-.022em;
+  margin:0 0 12px; text-wrap:balance;
+}
+.hero .sub{font-size:var(--step-1); color:var(--fg-soft); margin:0; max-width:56ch; text-wrap:pretty}
+.statline{
+  display:flex; flex-wrap:wrap; gap:8px 10px; margin-top:24px;
+  font-family:var(--f-mono); font-size:.75rem;
+}
+.statline span{
+  padding:3px 9px; border:1px solid var(--line); border-radius:999px;
+  color:var(--fg-soft); background:var(--bg);
+}
+.statline span b{color:var(--accent); font-weight:600}
+
+/* ── Seções ────────────────────────────────────────────── */
+section{padding-top:52px; scroll-margin-top:12px}
+.eyebrow{
+  font-family:var(--f-mono); font-size:.6875rem; font-weight:600;
+  letter-spacing:.15em; text-transform:uppercase; color:var(--accent);
+  margin:0 0 6px; display:flex; align-items:center; gap:8px;
+}
+.eyebrow::after{content:""; flex:1; height:1px; background:var(--line)}
+h2{font-size:var(--step-3); font-weight:600; letter-spacing:-.018em; margin:0 0 6px; line-height:1.2; text-wrap:balance}
+h3{font-size:var(--step-1); font-weight:600; margin:30px 0 8px; letter-spacing:-.01em}
+h4{font-size:var(--step-0); font-weight:600; margin:22px 0 6px; color:var(--fg)}
+p{margin:0 0 14px; text-wrap:pretty}
+.lede{color:var(--fg-soft); font-size:var(--step-1); margin-bottom:20px; text-wrap:pretty}
+a{color:var(--accent)}
+ul,ol{margin:0 0 14px; padding-left:1.3em; display:flex; flex-direction:column; gap:5px}
+li::marker{color:var(--muted)}
+strong{font-weight:600}
+hr{border:0; border-top:1px solid var(--line); margin:34px 0}
+
+/* ── Teclas ────────────────────────────────────────────── */
+kbd{
+  font-family:var(--f-mono); font-size:.8125em; font-weight:500;
+  background:var(--raised); color:var(--fg);
+  border:1px solid var(--line); border-radius:5px;
+  padding:1px 6px; box-shadow:var(--kbd-shadow); white-space:nowrap;
+  display:inline-block; line-height:1.5;
+}
+kbd.lead{color:var(--accent); border-color:var(--accent); background:var(--accent-soft)}
+code{
+  font-family:var(--f-mono); font-size:.86em;
+  background:var(--raised); padding:1px 5px; border-radius:4px; color:var(--cyan);
+}
+pre{
+  background:var(--surface); border:1px solid var(--line); border-radius:8px;
+  padding:14px 16px; overflow-x:auto; margin:0 0 16px;
+  font-family:var(--f-mono); font-size:var(--step--1); line-height:1.6; color:var(--fg-soft);
+}
+pre code{background:none; padding:0; color:inherit; font-size:1em}
+pre .c{color:var(--muted)}
+pre .k{color:var(--purple)}
+pre .s{color:var(--green)}
+
+/* ── Tabelas de atalho ─────────────────────────────────── */
+.kt-wrap{overflow-x:auto; margin:0 0 18px; border:1px solid var(--line); border-radius:10px; background:var(--surface)}
+table.kt{width:100%; border-collapse:collapse; font-size:var(--step--1)}
+table.kt caption{
+  text-align:left; padding:11px 15px 10px; font-family:var(--f-mono);
+  font-size:.6875rem; letter-spacing:.13em; text-transform:uppercase;
+  color:var(--muted); border-bottom:1px solid var(--line);
+}
+table.kt td{padding:7px 15px; border-bottom:1px solid var(--line); vertical-align:baseline}
+table.kt tr:last-child td{border-bottom:0}
+table.kt td:first-child{width:1%; white-space:nowrap; padding-right:20px}
+table.kt tr:hover td{background:var(--accent-soft)}
+.kt .note{color:var(--muted)}
+
+/* ── Painéis ───────────────────────────────────────────── */
+.panel{
+  border:1px solid var(--line); border-radius:10px; background:var(--surface);
+  padding:16px 18px; margin:0 0 18px; display:flex; flex-direction:column; gap:8px;
+}
+.panel > :last-child{margin-bottom:0}
+.panel .ph{
+  font-family:var(--f-mono); font-size:.6875rem; letter-spacing:.13em;
+  text-transform:uppercase; color:var(--muted); display:flex; gap:8px; align-items:center;
+}
+.panel.tip{border-left:3px solid var(--green)} .panel.tip .ph{color:var(--green)}
+.panel.warn{border-left:3px solid var(--orange)} .panel.warn .ph{color:var(--orange)}
+.panel.key{border-left:3px solid var(--accent)} .panel.key .ph{color:var(--accent)}
+
+/* ── Modos ─────────────────────────────────────────────── */
+.modes{display:grid; grid-template-columns:repeat(auto-fit,minmax(168px,1fr)); gap:10px; margin:0 0 20px}
+.mode{border:1px solid var(--line); border-top:3px solid var(--mc); border-radius:8px; padding:12px 14px; background:var(--surface)}
+.mode .mn{font-family:var(--f-mono); font-weight:600; font-size:.75rem; letter-spacing:.1em; color:var(--mc); margin-bottom:3px}
+.mode .md{font-size:var(--step--1); color:var(--fg-soft); line-height:1.5}
+.mode .mk{margin-top:8px; font-size:var(--step--1)}
+
+/* ── Receitas ──────────────────────────────────────────── */
+.recipe{border:1px solid var(--line); border-radius:10px; overflow:hidden; margin:0 0 14px; background:var(--surface)}
+.recipe summary{
+  padding:12px 16px; cursor:pointer; font-weight:500; list-style:none;
+  display:flex; gap:10px; align-items:baseline;
+}
+.recipe summary::-webkit-details-marker{display:none}
+.recipe summary::before{content:"▸"; color:var(--accent); font-size:.8em}
+.recipe[open] summary::before{content:"▾"}
+.recipe summary:hover{background:var(--accent-soft)}
+.recipe .body{padding:2px 16px 16px 30px; border-top:1px solid var(--line)}
+.recipe .body > :last-child{margin-bottom:0}
+.steps{counter-reset:s; list-style:none; padding:0; margin:0 0 14px; display:flex; flex-direction:column; gap:9px}
+.steps li{counter-increment:s; padding-left:30px; position:relative; font-size:var(--step--1)}
+.steps li::before{
+  content:counter(s); position:absolute; left:0; top:1px;
+  font-family:var(--f-mono); font-size:.6875rem; font-weight:600; color:var(--accent);
+  width:19px; height:19px; border:1px solid var(--line); border-radius:50%;
+  display:grid; place-items:center; background:var(--bg);
+}
+
+/* ── Busca da cheatsheet ───────────────────────────────── */
+.searchbar{
+  position:sticky; top:0; z-index:5; background:var(--bg);
+  padding:12px 0 14px; border-bottom:1px solid var(--line); margin-bottom:18px;
+  display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+}
+.searchbar input{
+  flex:1; min-width:220px; font-family:var(--f-mono); font-size:var(--step--1);
+  padding:8px 12px; border-radius:7px; border:1px solid var(--line);
+  background:var(--surface); color:var(--fg);
+}
+.searchbar input::placeholder{color:var(--muted)}
+.hitcount{font-family:var(--f-mono); font-size:.75rem; color:var(--muted); font-variant-numeric:tabular-nums}
+tr[hidden]{display:none}
+
+/* ── Rodapé ────────────────────────────────────────────── */
+footer{border-top:1px solid var(--line); margin-top:60px; padding-top:22px; color:var(--muted); font-size:var(--step--1)}
+
+@media (max-width:900px){
+  .shell{grid-template-columns:1fr}
+  .rail{position:static; height:auto; border-right:0; border-bottom:1px solid var(--line);
+        flex-direction:row; flex-wrap:wrap; gap:0; padding:14px 0 16px}
+  .rail-head{width:100%}
+  .rail .div{width:100%; margin-top:8px}
+  .rail a{border-left:0; border-bottom:2px solid transparent; padding:5px 14px}
+  .rail a.on{border-left:0; border-bottom-color:var(--accent)}
+  .wrap,.wide{padding:0 22px}
+}
+</style>
+
+<div class="shell">
+
+<nav class="rail" aria-label="Sumário">
+  <div class="rail-head">
+    <div class="mark">nvim · rust · ai</div>
+    <div class="who">manual de bordo</div>
+  </div>
+
+  <div class="div">Setup</div>
+  <a href="#setup"><span class="n">·</span>O que foi instalado</a>
+  <a href="#primeiro"><span class="n">·</span>Primeiro boot</a>
+
+  <div class="div">Trilha de aprendizado</div>
+  <a href="#gramatica"><span class="n">1</span>A gramática do Vim</a>
+  <a href="#modos"><span class="n">2</span>Os modos</a>
+  <a href="#movimento"><span class="n">3</span>Movimento</a>
+  <a href="#edicao"><span class="n">4</span>Edição</a>
+  <a href="#textobjects"><span class="n">5</span>Textobjects</a>
+  <a href="#navegacao"><span class="n">6</span>Achar qualquer coisa</a>
+  <a href="#lsp"><span class="n">7</span>LSP</a>
+  <a href="#rust"><span class="n">8</span>Rust no dia a dia</a>
+  <a href="#ia"><span class="n">9</span>IA</a>
+  <a href="#git"><span class="n">10</span>Git</a>
+  <a href="#debug"><span class="n">11</span>Debug</a>
+  <a href="#janelas"><span class="n">12</span>Janelas e buffers</a>
+  <a href="#poder"><span class="n">13</span>Macros e registradores</a>
+  <a href="#quickfix"><span class="n">14</span>Quickfix</a>
+
+  <div class="div">Referência</div>
+  <a href="#receitas"><span class="n">·</span>Receitas do dia a dia</a>
+  <a href="#cheatsheet"><span class="n">·</span>Cheatsheet (busca)</a>
+  <a href="#problemas"><span class="n">·</span>Quando quebrar</a>
+  <a href="#estender"><span class="n">·</span>Estender a config</a>
+</nav>
+
+<main>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>Manual do Neovim Rust</h1>
+    <p class="sub">Sua config, explicada de baixo pra cima — da gramática do Vim até expandir uma macro do <code>serde</code> e mandar o erro pro Claude sem sair do editor.</p>
+    <div class="statline">
+      <span>nvim <b>0.12.5</b></span>
+      <span>startup <b>38 ms</b></span>
+      <span><b>38</b> plugins</span>
+      <span><b>25</b> parsers treesitter</span>
+      <span>tema <b>Tokyo Night</b></span>
+      <span>leader = <b>espaço</b></span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- ══ SETUP ══════════════════════════════════════════ -->
+<section id="setup">
+  <p class="eyebrow">Setup</p>
+  <h2>O que foi instalado</h2>
+  <p class="lede">Nenhum "distro" pronta (LazyVim, NvChad). Essa config é sua, cada linha é legível e você pode mudar qualquer coisa sem lutar contra abstrações de terceiros.</p>
+
+  <h3>Estrutura dos arquivos</h3>
+<pre><code>~/.config/nvim/
+├─ init.lua              <span class="c">← ponto de entrada; define o leader e chama o resto</span>
+└─ lua/
+   ├─ config/
+   │  ├─ options.lua     <span class="c">← opções do editor (número de linha, indentação...)</span>
+   │  ├─ lazy.lua        <span class="c">← bootstrap do gerenciador de plugins</span>
+   │  ├─ keymaps.lua     <span class="c">← atalhos globais</span>
+   │  └─ autocmds.lua    <span class="c">← comportamentos automáticos</span>
+   └─ plugins/
+      ├─ ui.lua          <span class="c">← tema, statusline, abas, dashboard, notificações</span>
+      ├─ editor.lua      <span class="c">← movimento, git, busca, sessões</span>
+      ├─ treesitter.lua  <span class="c">← parsing do código</span>
+      ├─ lsp.lua         <span class="c">← inteligência de código + formatação</span>
+      ├─ completion.lua  <span class="c">← autocomplete</span>
+      ├─ rust.lua        <span class="c">← rustaceanvim + crates.nvim</span>
+      ├─ ai.lua          <span class="c">← Supermaven + Sidekick</span>
+      └─ dap.lua         <span class="c">← debugger</span></code></pre>
+
+  <h3>As peças e por que cada uma está aqui</h3>
+  <div class="kt-wrap">
+  <table class="kt">
+    <caption>Núcleo</caption>
+    <tr><td><code>lazy.nvim</code></td><td>Gerenciador de plugins. Carrega sob demanda — por isso o startup fica em <strong>38 ms</strong> mesmo com 38 plugins (abrir um <code>.rs</code>, com LSP e treesitter subindo junto, fica em ~270 ms).</td></tr>
+    <tr><td><code>rustaceanvim</code></td><td>O cérebro do Rust. Sucessor do <code>rust-tools</code>. Configura o <code>rust-analyzer</code> sozinho e adiciona o que o protocolo LSP não cobre: expandir macros, ver MIR/HIR, rodar testes, integrar o debugger.</td></tr>
+    <tr><td><code>blink.cmp</code></td><td>Autocomplete. Sucessor do <code>nvim-cmp</code>, com o fuzzy matcher escrito em Rust (~0.5 ms por tecla).</td></tr>
+    <tr><td><code>snacks.nvim</code></td><td>Doze plugins em um: fuzzy finder, explorer, notificações, dashboard, guias de indentação, terminal, lazygit. Substitui telescope + nvim-tree + notify + dressing.</td></tr>
+    <tr><td><code>nvim-treesitter</code></td><td>Parsing real do código numa árvore sintática. É o que faz "selecione esta função" e as dobras funcionarem de verdade.</td></tr>
+    <tr><td><code>mason.nvim</code></td><td>Instala LSPs, formatters e debuggers sem <code>sudo</code>, dentro do <code>~/.local/share/nvim</code>.</td></tr>
+    <tr><td><code>conform.nvim</code></td><td>Formatação ao salvar (<code>rustfmt</code>, <code>stylua</code>, <code>taplo</code>).</td></tr>
+    <tr><td><code>crates.nvim</code></td><td>No <code>Cargo.toml</code>: mostra a versão mais nova de cada dep, autocompleta nomes e features, abre a doc.</td></tr>
+    <tr><td><code>nvim-dap</code></td><td>Debugger com breakpoints reais, via <code>codelldb</code>.</td></tr>
+  </table>
+  </div>
+
+  <div class="kt-wrap">
+  <table class="kt">
+    <caption>Conforto</caption>
+    <tr><td><code>which-key</code></td><td>Segure <kbd class="lead">Espaço</kbd> e ele mostra todos os atalhos. É o seu professor particular.</td></tr>
+    <tr><td><code>flash.nvim</code></td><td>Pula pra qualquer lugar visível em 2–3 teclas.</td></tr>
+    <tr><td><code>mini.nvim</code></td><td>Pares automáticos, surround, textobjects extras, mover blocos.</td></tr>
+    <tr><td><code>oil.nvim</code></td><td>Edita o sistema de arquivos como se fosse um buffer de texto.</td></tr>
+    <tr><td><code>trouble.nvim</code></td><td>Lista navegável de erros, referências e símbolos.</td></tr>
+    <tr><td><code>gitsigns</code> + <code>lazygit</code></td><td>Git na coluna lateral e uma TUI completa com <kbd class="lead">Espaço</kbd><kbd>g</kbd><kbd>g</kbd>.</td></tr>
+    <tr><td><code>noice.nvim</code></td><td>Linha de comando flutuante no centro e hover do LSP com borda.</td></tr>
+    <tr><td><code>persistence.nvim</code></td><td>Sessões: reabre exatamente onde você parou.</td></tr>
+  </table>
+  </div>
+</section>
+
+<!-- ══ PRIMEIRO BOOT ══════════════════════════════════ -->
+<section id="primeiro">
+  <p class="eyebrow">Setup</p>
+  <h2>Primeiro boot</h2>
+
+  <div class="panel warn">
+    <div class="ph">Antes de tudo</div>
+    <p>Configure a fonte do seu terminal para <strong>Hack Nerd Font</strong> (já instalada no sistema). Sem ela, todos os ícones viram quadradinhos. No Kitty: <code>font_family Hack Nerd Font Mono</code>. No Alacritty: <code>family: Hack Nerd Font Mono</code>. No GNOME Terminal / Konsole, é no menu de preferências do perfil.</p>
+  </div>
+
+  <h3>Checagem de saúde</h3>
+  <p>Abra o Neovim e rode:</p>
+<pre><code>:checkhealth</code></pre>
+  <p>Vale olhar especificamente:</p>
+  <ul>
+    <li><code>:checkhealth lazy</code> — plugins</li>
+    <li><code>:checkhealth nvim-treesitter</code> — parsers</li>
+    <li><code>:checkhealth mason</code> — ferramentas externas</li>
+    <li><code>:checkhealth sidekick</code> — quais CLIs de IA ele encontrou</li>
+    <li><code>:LspInfo</code> — dentro de um <code>.rs</code>, mostra se o <code>rust-analyzer</code> anexou</li>
+  </ul>
+
+  <div class="panel tip">
+    <div class="ph">Primeira vez num projeto Rust</div>
+    <p>O <code>rust-analyzer</code> precisa indexar tudo antes de ficar útil. Num projeto médio leva 10–60 s; num workspace grande, mais. O <code>fidget</code> mostra o progresso no canto inferior direito. Enquanto ele indexa, o autocomplete vem incompleto — é normal, não é bug.</p>
+  </div>
+
+  <h3>As três teclas que resolvem qualquer dúvida</h3>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd class="lead">Espaço</kbd></td><td>Segure e espere. O which-key abre um menu com tudo que existe a partir dali. Navegue pelos submenus. <strong>Esse é o caminho para aprender a config sem decorar nada.</strong></td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>s</kbd><kbd>k</kbd></td><td>Busca fuzzy em <em>todos</em> os atalhos ativos, com descrição. Digite "rust", "git", "debug".</td></tr>
+    <tr><td><kbd>:</kbd><code>help</code> <kbd>assunto</kbd></td><td>A documentação do Vim é excelente e offline. <code>:help text-objects</code>, <code>:help registers</code>.</td></tr>
+  </table>
+  </div>
+</section>
+
+<hr>
+
+<!-- ══ 1. GRAMÁTICA ═══════════════════════════════════ -->
+<section id="gramatica">
+  <p class="eyebrow">Trilha · 01</p>
+  <h2>A gramática do Vim</h2>
+  <p class="lede">Isso aqui é o conceito que separa quem "usa o vim" de quem é fluente. Não são atalhos decorados — é uma linguagem com verbos, objetos e advérbios que se combinam.</p>
+
+  <p>Toda edição segue a forma:</p>
+<pre><code><span class="k">[quantas vezes]</span> <span class="s">verbo</span> <span class="k">[quantas vezes]</span> <span class="s">objeto</span></code></pre>
+
+  <h3>Verbos (operadores)</h3>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd>d</kbd></td><td><strong>delete</strong> — apaga</td></tr>
+    <tr><td><kbd>c</kbd></td><td><strong>change</strong> — apaga e entra em modo de inserção</td></tr>
+    <tr><td><kbd>y</kbd></td><td><strong>yank</strong> — copia</td></tr>
+    <tr><td><kbd>v</kbd></td><td><strong>visual</strong> — seleciona</td></tr>
+    <tr><td><kbd>&gt;</kbd> <kbd>&lt;</kbd></td><td>indenta / desindenta</td></tr>
+    <tr><td><kbd>g</kbd><kbd>c</kbd></td><td>comenta / descomenta</td></tr>
+    <tr><td><kbd>=</kbd></td><td>reindenta</td></tr>
+    <tr><td><kbd>g</kbd><kbd>s</kbd><kbd>a</kbd></td><td>envolve com aspas/parênteses (do mini.surround)</td></tr>
+  </table>
+  </div>
+
+  <h3>Objetos (movimentos e textobjects)</h3>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd>w</kbd> <kbd>b</kbd> <kbd>e</kbd></td><td>palavra pra frente / pra trás / fim da palavra</td></tr>
+    <tr><td><kbd>$</kbd> <kbd>0</kbd> <kbd>^</kbd></td><td>fim da linha / começo absoluto / primeiro caractere não-branco</td></tr>
+    <tr><td><kbd>}</kbd> <kbd>{</kbd></td><td>próximo / anterior parágrafo (bloco separado por linha em branco)</td></tr>
+    <tr><td><kbd>i</kbd><kbd>(</kbd></td><td><strong>inner</strong> parênteses — o conteúdo <em>dentro</em></td></tr>
+    <tr><td><kbd>a</kbd><kbd>(</kbd></td><td><strong>around</strong> parênteses — conteúdo <em>e</em> os parênteses</td></tr>
+    <tr><td><kbd>i</kbd><kbd>f</kbd></td><td>o corpo da função (via treesitter)</td></tr>
+  </table>
+  </div>
+
+  <h3>Agora combine</h3>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd>d</kbd><kbd>w</kbd></td><td>apaga uma palavra</td></tr>
+    <tr><td><kbd>3</kbd><kbd>d</kbd><kbd>w</kbd></td><td>apaga três palavras</td></tr>
+    <tr><td><kbd>c</kbd><kbd>i</kbd><kbd>(</kbd></td><td>troca tudo dentro dos parênteses — o clássico para reescrever os argumentos de uma chamada</td></tr>
+    <tr><td><kbd>y</kbd><kbd>i</kbd><kbd>f</kbd></td><td>copia o corpo da função inteira</td></tr>
+    <tr><td><kbd>d</kbd><kbd>a</kbd><kbd>"</kbd></td><td>apaga a string com as aspas</td></tr>
+    <tr><td><kbd>&gt;</kbd><kbd>i</kbd><kbd>{</kbd></td><td>indenta o bloco inteiro</td></tr>
+    <tr><td><kbd>g</kbd><kbd>c</kbd><kbd>i</kbd><kbd>f</kbd></td><td>comenta a função toda</td></tr>
+  </table>
+  </div>
+
+  <div class="panel key">
+    <div class="ph">O insight</div>
+    <p>Você nunca decora <code>ciw</code>, <code>ci(</code>, <code>ci"</code>, <code>cif</code> como quatro comandos. Você aprende <em>um verbo</em> (<kbd>c</kbd>) e <em>quatro objetos</em>, e a combinação sai sozinha. Aprender 8 verbos e 15 objetos te dá 120 comandos que você nunca precisou memorizar.</p>
+  </div>
+
+  <h4>Atalhos que dobram o verbo</h4>
+  <p>Repetir o verbo aplica ele na linha inteira: <kbd>d</kbd><kbd>d</kbd> apaga a linha, <kbd>y</kbd><kbd>y</kbd> copia a linha, <kbd>g</kbd><kbd>c</kbd><kbd>c</kbd> comenta a linha.</p>
+</section>
+
+<!-- ══ 2. MODOS ═══════════════════════════════════════ -->
+<section id="modos">
+  <p class="eyebrow">Trilha · 02</p>
+  <h2>Os modos</h2>
+  <p class="lede">O canto inferior esquerdo (na lualine) sempre mostra em que modo você está, com cor própria. Quando estiver perdido, <kbd>Esc</kbd> duas vezes volta pro normal.</p>
+
+  <div class="modes">
+    <div class="mode" style="--mc:var(--accent)">
+      <div class="mn">NORMAL</div>
+      <div class="md">O estado de repouso. Aqui as letras são comandos, não texto. É onde você passa a maior parte do tempo.</div>
+      <div class="mk"><kbd>Esc</kbd> volta pra cá</div>
+    </div>
+    <div class="mode" style="--mc:var(--green)">
+      <div class="mn">INSERT</div>
+      <div class="md">Digitação normal, como em qualquer editor. Entre com <kbd>i</kbd>, <kbd>a</kbd>, <kbd>o</kbd>, <kbd>c</kbd>.</div>
+      <div class="mk"><kbd>j</kbd><kbd>k</kbd> sai (mapeado na sua config)</div>
+    </div>
+    <div class="mode" style="--mc:var(--purple)">
+      <div class="mn">VISUAL</div>
+      <div class="md">Seleção. <kbd>v</kbd> por caractere, <kbd>V</kbd> por linha, <kbd>Ctrl</kbd>+<kbd>v</kbd> em bloco (colunas!).</div>
+      <div class="mk">Depois de selecionar, aplique um verbo</div>
+    </div>
+    <div class="mode" style="--mc:var(--orange)">
+      <div class="mn">COMMAND</div>
+      <div class="md">Entre com <kbd>:</kbd>. Aqui moram <code>:w</code>, <code>:q</code>, <code>:%s/a/b/g</code> e todos os comandos de plugin.</div>
+      <div class="mk">Na sua config abre flutuante no centro</div>
+    </div>
+    <div class="mode" style="--mc:var(--cyan)">
+      <div class="mn">TERMINAL</div>
+      <div class="md">Dentro de um terminal embutido. Aqui as teclas vão pro shell, não pro Vim.</div>
+      <div class="mk"><kbd>Esc</kbd><kbd>Esc</kbd> volta pro normal</div>
+    </div>
+    <div class="mode" style="--mc:var(--red)">
+      <div class="mn">OPERATOR-PENDING</div>
+      <div class="md">O instante entre você apertar <kbd>d</kbd> e escolher o objeto. Você não "vê" esse modo, mas é ele que dá sentido à gramática.</div>
+      <div class="mk">Dura milissegundos</div>
+    </div>
+  </div>
+
+  <h3>As formas de entrar em INSERT</h3>
+  <p>Escolher a certa economiza um movimento inteiro:</p>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd>i</kbd></td><td>insere <em>antes</em> do cursor</td></tr>
+    <tr><td><kbd>a</kbd></td><td>insere <em>depois</em> do cursor (<strong>a</strong>ppend)</td></tr>
+    <tr><td><kbd>I</kbd></td><td>insere no primeiro caractere não-branco da linha</td></tr>
+    <tr><td><kbd>A</kbd></td><td>insere no fim da linha — <strong>o mais usado de todos</strong> (pra adicionar <code>;</code>, <code>?</code>, <code>.await</code>)</td></tr>
+    <tr><td><kbd>o</kbd></td><td>abre uma linha nova <em>abaixo</em> e insere</td></tr>
+    <tr><td><kbd>O</kbd></td><td>abre uma linha nova <em>acima</em> e insere</td></tr>
+    <tr><td><kbd>g</kbd><kbd>i</kbd></td><td>volta pro último ponto onde você estava inserindo</td></tr>
+  </table>
+  </div>
+</section>
+
+<!-- ══ 3. MOVIMENTO ═══════════════════════════════════ -->
+<section id="movimento">
+  <p class="eyebrow">Trilha · 03</p>
+  <h2>Movimento</h2>
+  <p class="lede">Regra de ouro: <strong>nunca segure <kbd>j</kbd> apertado</strong>. Se você está repetindo uma tecla, existe um movimento melhor.</p>
+
+  <h3>Dentro da linha</h3>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd>f</kbd><kbd>x</kbd></td><td>pula pro próximo <code>x</code> na linha (<strong>f</strong>ind). <kbd>;</kbd> repete, <kbd>,</kbd> repete pra trás.</td></tr>
+    <tr><td><kbd>t</kbd><kbd>x</kbd></td><td>pula pra <em>logo antes</em> do próximo <code>x</code> (<strong>t</strong>ill). Combina com verbos: <kbd>d</kbd><kbd>t</kbd><kbd>,</kbd> apaga até a vírgula.</td></tr>
+    <tr><td><kbd>F</kbd><kbd>x</kbd> <kbd>T</kbd><kbd>x</kbd></td><td>as mesmas, pra trás</td></tr>
+    <tr><td><kbd>w</kbd> <kbd>b</kbd></td><td>palavra pra frente / pra trás (para em pontuação)</td></tr>
+    <tr><td><kbd>W</kbd> <kbd>B</kbd></td><td>o mesmo, mas só quebra em espaço — útil pra pular <code>foo::bar::Baz</code> inteiro</td></tr>
+    <tr><td><kbd>%</kbd></td><td>pula pro par correspondente do <code>(</code>, <code>[</code>, <code>{</code> sob o cursor</td></tr>
+  </table>
+  </div>
+
+  <h3>Na tela</h3>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd>s</kbd> + 2 letras</td><td><strong>Flash.</strong> Digite duas letras de qualquer lugar visível e labels aparecem sobre cada ocorrência. Aperte o label e você está lá. <strong>É o movimento que você mais vai usar.</strong></td></tr>
+    <tr><td><kbd>S</kbd></td><td>Flash no treesitter: labels sobre os nós da árvore, pra selecionar expressões/blocos inteiros</td></tr>
+    <tr><td><kbd>H</kbd> <kbd>M</kbd> <kbd>L</kbd></td><td>topo / meio / base da tela (<strong>H</strong>igh, <strong>M</strong>iddle, <strong>L</strong>ow)</td></tr>
+    <tr><td><kbd>z</kbd><kbd>z</kbd></td><td>centraliza a tela no cursor. <kbd>z</kbd><kbd>t</kbd> joga pro topo, <kbd>z</kbd><kbd>b</kbd> pra base.</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>d</kbd> / <kbd>Ctrl</kbd>+<kbd>u</kbd></td><td>meia página abaixo / acima — já centralizado na sua config</td></tr>
+  </table>
+  </div>
+
+  <h3>No arquivo</h3>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd>g</kbd><kbd>g</kbd> / <kbd>G</kbd></td><td>topo / fim do arquivo</td></tr>
+    <tr><td><kbd>4</kbd><kbd>2</kbd><kbd>G</kbd></td><td>vai pra linha 42. (Ou <code>:42</code>.)</td></tr>
+    <tr><td><kbd>5</kbd><kbd>j</kbd></td><td>5 linhas abaixo. Com <code>relativenumber</code> ligado, o número está escrito na tela — é só ler e digitar.</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>o</kbd></td><td><strong>Volta</strong> pro lugar anterior da jumplist. Pulou pra uma definição e quer voltar? É esse.</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>i</kbd></td><td>avança na jumplist (o "forward" do navegador)</td></tr>
+    <tr><td><kbd>`</kbd><kbd>`</kbd></td><td>alterna entre a posição atual e a última</td></tr>
+    <tr><td><kbd>]</kbd><kbd>f</kbd> / <kbd>[</kbd><kbd>f</kbd></td><td>próxima / anterior <strong>função</strong> (treesitter)</td></tr>
+    <tr><td><kbd>]</kbd><kbd>c</kbd> / <kbd>[</kbd><kbd>c</kbd></td><td>próximo / anterior <code>struct</code> ou <code>impl</code></td></tr>
+    <tr><td><kbd>]</kbd><kbd>d</kbd> / <kbd>[</kbd><kbd>d</kbd></td><td>próximo / anterior diagnostic (erro ou warning)</td></tr>
+    <tr><td><kbd>]</kbd><kbd>e</kbd> / <kbd>[</kbd><kbd>e</kbd></td><td>só <strong>erros</strong>, ignorando warnings</td></tr>
+    <tr><td><kbd>]</kbd><kbd>h</kbd> / <kbd>[</kbd><kbd>h</kbd></td><td>próximo / anterior hunk do git</td></tr>
+    <tr><td><kbd>]</kbd><kbd>t</kbd> / <kbd>[</kbd><kbd>t</kbd></td><td>próximo / anterior <code>TODO</code></td></tr>
+  </table>
+  </div>
+
+  <div class="panel tip">
+    <div class="ph">O padrão dos colchetes</div>
+    <p><kbd>]</kbd> é sempre "próximo", <kbd>[</kbd> é sempre "anterior". Uma vez que você internaliza isso, cada novo plugin que adiciona um <kbd>]</kbd><kbd>algo</kbd> já nasce aprendido.</p>
+  </div>
+</section>
+
+<!-- ══ 4. EDIÇÃO ══════════════════════════════════════ -->
+<section id="edicao">
+  <p class="eyebrow">Trilha · 04</p>
+  <h2>Edição</h2>
+
+  <h3>O ponto</h3>
+  <div class="panel key">
+    <div class="ph">A tecla mais subestimada do Vim</div>
+    <p><kbd>.</kbd> repete a última alteração. Mudou uma palavra com <kbd>c</kbd><kbd>i</kbd><kbd>w</kbd><code>novo</code><kbd>Esc</kbd>? Vá até a próxima ocorrência e aperte <kbd>.</kbd>. Combine com <kbd>n</kbd> (próxima busca) e você tem um "substituir com confirmação" mais rápido que qualquer regex: <kbd>n</kbd><kbd>.</kbd><kbd>n</kbd><kbd>.</kbd><kbd>n</kbd><kbd>.</kbd></p>
+  </div>
+
+  <h3>Desfazer</h3>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd>u</kbd> / <kbd>Ctrl</kbd>+<kbd>r</kbd></td><td>desfaz / refaz</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>s</kbd><kbd>u</kbd></td><td><strong>Árvore de undo.</strong> O Vim guarda uma árvore, não uma pilha — nada que você escreveu se perde. Navegue visualmente por todos os estados anteriores do arquivo.</td></tr>
+    <tr><td colspan="2" class="note">O undo é <strong>persistente</strong>: feche o nvim, reabra amanhã, e o <kbd>u</kbd> ainda funciona.</td></tr>
+  </table>
+  </div>
+
+  <h3>Manipular linhas</h3>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd>Alt</kbd>+<kbd>j</kbd> / <kbd>Alt</kbd>+<kbd>k</kbd></td><td>move a linha (ou a seleção) pra baixo/cima. Reindenta sozinho.</td></tr>
+    <tr><td><kbd>y</kbd><kbd>y</kbd><kbd>p</kbd></td><td>duplica a linha</td></tr>
+    <tr><td><kbd>J</kbd></td><td>junta a linha de baixo com a atual</td></tr>
+    <tr><td><kbd>x</kbd> / <kbd>r</kbd><kbd>c</kbd></td><td>apaga o caractere / substitui por <code>c</code></td></tr>
+    <tr><td><kbd>~</kbd></td><td>alterna maiúscula/minúscula do caractere</td></tr>
+    <tr><td><kbd>g</kbd><kbd>U</kbd><kbd>i</kbd><kbd>w</kbd> / <kbd>g</kbd><kbd>u</kbd><kbd>i</kbd><kbd>w</kbd></td><td>palavra pra MAIÚSCULA / minúscula</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>a</kbd> / <kbd>Ctrl</kbd>+<kbd>x</kbd></td><td>incrementa / decrementa o número sob o cursor</td></tr>
+  </table>
+  </div>
+
+  <h3>Colar sem perder o que você copiou</h3>
+  <p>Problema clássico: você copia algo, seleciona um trecho, cola por cima — e agora o registrador tem o texto <em>substituído</em>, não o seu. Solução na sua config:</p>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>p</kbd> <span class="note">(em visual)</span></td><td>cola por cima <strong>mantendo</strong> o registrador intacto. Pode colar a mesma coisa em 10 lugares.</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>D</kbd> <span class="note">(em visual)</span></td><td>apaga sem sujar o registrador</td></tr>
+  </table>
+  </div>
+
+  <h3>Seleção em bloco (colunas)</h3>
+  <p>O truque que parece mágica pra quem vem de IDE:</p>
+  <ol class="steps">
+    <li><kbd>Ctrl</kbd>+<kbd>v</kbd> entra em visual-block</li>
+    <li><kbd>j</kbd><kbd>j</kbd><kbd>j</kbd> desce, selecionando uma coluna estreita</li>
+    <li><kbd>I</kbd> (maiúsculo) insere no começo, ou <kbd>A</kbd> no fim</li>
+    <li>Digite o texto e aperte <kbd>Esc</kbd> — ele aparece em <em>todas</em> as linhas</li>
+  </ol>
+  <p>Uso real em Rust: adicionar <code>pub </code> em 12 campos de uma struct, ou <code>#[serde(skip)]</code> numa coluna.</p>
+
+  <h3>Substituir</h3>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><code>:%s/velho/novo/g</code></td><td>substitui no arquivo inteiro. Sua config mostra <strong>preview ao vivo</strong> enquanto você digita (<code>inccommand</code>).</td></tr>
+    <tr><td><code>:%s/velho/novo/gc</code></td><td>o <code>c</code> pede confirmação a cada ocorrência</td></tr>
+    <tr><td><code>:'&lt;,'&gt;s/a/b/g</code></td><td>só na seleção visual (aparece sozinho se você apertar <kbd>:</kbd> em visual)</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>s</kbd><kbd>r</kbd></td><td><strong>grug-far</strong>: busca e substituição no arquivo, com painel e preview</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>s</kbd><kbd>R</kbd></td><td>o mesmo, no <strong>projeto inteiro</strong> — o substituto do "Replace in Files"</td></tr>
+  </table>
+  </div>
+  <div class="panel tip">
+    <div class="ph">Em Rust, prefira o LSP</div>
+    <p>Pra renomear um símbolo, <kbd class="lead">Espaço</kbd><kbd>c</kbd><kbd>r</kbd> (rename do LSP) é sempre melhor que regex: ele entende escopo, renomeia em todos os arquivos e não toca em strings ou comentários que por acaso têm o mesmo texto.</p>
+  </div>
+</section>
+
+<!-- ══ 5. TEXTOBJECTS ═════════════════════════════════ -->
+<section id="textobjects">
+  <p class="eyebrow">Trilha · 05</p>
+  <h2>Textobjects</h2>
+  <p class="lede">Onde a coisa fica séria. Textobjects entendem a <em>estrutura</em> do código, não posições de cursor.</p>
+
+  <p>Todos seguem o padrão <kbd>verbo</kbd> + <kbd>i</kbd>/<kbd>a</kbd> + <kbd>objeto</kbd>, onde <kbd>i</kbd> = <em>inner</em> (só o conteúdo) e <kbd>a</kbd> = <em>around</em> (com os delimitadores).</p>
+
+  <div class="kt-wrap">
+  <table class="kt">
+    <caption>Sintáticos</caption>
+    <tr><td><kbd>i</kbd><kbd>w</kbd> / <kbd>a</kbd><kbd>w</kbd></td><td>palavra / palavra com o espaço</td></tr>
+    <tr><td><kbd>i</kbd><kbd>(</kbd> <kbd>i</kbd><kbd>[</kbd> <kbd>i</kbd><kbd>{</kbd></td><td>dentro dos delimitadores</td></tr>
+    <tr><td><kbd>i</kbd><kbd>"</kbd> <kbd>i</kbd><kbd>'</kbd> <kbd>i</kbd><kbd>`</kbd></td><td>dentro das aspas</td></tr>
+    <tr><td><kbd>i</kbd><kbd>p</kbd></td><td>o parágrafo / bloco</td></tr>
+    <tr><td><kbd>i</kbd><kbd>t</kbd></td><td>dentro de uma tag (HTML/XML)</td></tr>
+  </table>
+  </div>
+
+  <div class="kt-wrap">
+  <table class="kt">
+    <caption>Semânticos — via treesitter</caption>
+    <tr><td><kbd>i</kbd><kbd>f</kbd> / <kbd>a</kbd><kbd>f</kbd></td><td><strong>função</strong> — corpo / função inteira com assinatura</td></tr>
+    <tr><td><kbd>i</kbd><kbd>c</kbd> / <kbd>a</kbd><kbd>c</kbd></td><td><strong>classe</strong> — em Rust: <code>struct</code>, <code>enum</code>, <code>impl</code>, <code>trait</code></td></tr>
+    <tr><td><kbd>i</kbd><kbd>a</kbd> / <kbd>a</kbd><kbd>a</kbd></td><td><strong>argumento</strong> — <kbd>d</kbd><kbd>a</kbd><kbd>a</kbd> remove o parâmetro <em>e</em> a vírgula</td></tr>
+    <tr><td><kbd>i</kbd><kbd>o</kbd></td><td><strong>bloco</strong> — o corpo de um <code>if</code>, <code>match</code>, <code>loop</code>, <code>for</code></td></tr>
+    <tr><td><kbd>i</kbd><kbd>h</kbd></td><td><strong>hunk do git</strong> — <kbd>d</kbd><kbd>i</kbd><kbd>h</kbd> reverte a alteração local</td></tr>
+  </table>
+  </div>
+
+  <h3>Combos que valem ouro em Rust</h3>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd>c</kbd><kbd>i</kbd><kbd>f</kbd></td><td>reescreve o corpo da função sem tocar na assinatura</td></tr>
+    <tr><td><kbd>d</kbd><kbd>a</kbd><kbd>f</kbd></td><td>deleta a função inteira, docs e atributos inclusos</td></tr>
+    <tr><td><kbd>v</kbd><kbd>i</kbd><kbd>c</kbd></td><td>seleciona o <code>impl</code> inteiro (pra mandar pra IA, por exemplo)</td></tr>
+    <tr><td><kbd>y</kbd><kbd>a</kbd><kbd>a</kbd></td><td>copia um argumento com a vírgula, pronto pra colar em outra assinatura</td></tr>
+    <tr><td><kbd>c</kbd><kbd>i</kbd><kbd>o</kbd></td><td>reescreve o braço de um <code>match</code></td></tr>
+  </table>
+  </div>
+
+  <h3>Trocar argumentos de lugar</h3>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>c</kbd><kbd>n</kbd><kbd>a</kbd></td><td>troca o argumento sob o cursor com o <strong>próximo</strong></td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>c</kbd><kbd>p</kbd><kbd>a</kbd></td><td>troca com o <strong>anterior</strong></td></tr>
+  </table>
+  </div>
+
+  <h3>Surround</h3>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd>g</kbd><kbd>s</kbd><kbd>a</kbd> + objeto + delimitador</td><td>envolve. <kbd>g</kbd><kbd>s</kbd><kbd>a</kbd><kbd>i</kbd><kbd>w</kbd><kbd>"</kbd> põe aspas na palavra.</td></tr>
+    <tr><td><kbd>g</kbd><kbd>s</kbd><kbd>d</kbd> + delimitador</td><td>remove. <kbd>g</kbd><kbd>s</kbd><kbd>d</kbd><kbd>"</kbd> tira as aspas.</td></tr>
+    <tr><td><kbd>g</kbd><kbd>s</kbd><kbd>r</kbd> + velho + novo</td><td>troca. <kbd>g</kbd><kbd>s</kbd><kbd>r</kbd><kbd>'</kbd><kbd>"</kbd> converte aspas simples em duplas.</td></tr>
+  </table>
+  </div>
+</section>
+
+<!-- ══ 6. NAVEGAÇÃO ═══════════════════════════════════ -->
+<section id="navegacao">
+  <p class="eyebrow">Trilha · 06</p>
+  <h2>Achar qualquer coisa</h2>
+  <p class="lede">O picker do snacks é o seu <kbd>Ctrl</kbd>+<kbd>P</kbd>, <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>F</kbd> e "Go to Symbol" — todos no mesmo lugar.</p>
+
+  <h3>Arquivos</h3>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>Espaço</kbd></td><td><strong>Buscar arquivo.</strong> O atalho que você mais vai usar no dia.</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>f</kbd><kbd>r</kbd></td><td>arquivos recentes</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>f</kbd><kbd>b</kbd></td><td>buffers abertos</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>f</kbd><kbd>e</kbd></td><td>explorer (árvore lateral)</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>f</kbd><kbd>c</kbd></td><td>abre a config do Neovim</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>f</kbd><kbd>y</kbd></td><td>copia o caminho do arquivo atual</td></tr>
+    <tr><td><kbd>-</kbd></td><td><strong>oil</strong>: abre o diretório do arquivo atual como um buffer editável</td></tr>
+  </table>
+  </div>
+
+  <h3>Conteúdo</h3>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>s</kbd><kbd>g</kbd></td><td><strong>Grep no projeto.</strong> Busca ao vivo com ripgrep; digite e veja os resultados filtrarem.</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>s</kbd><kbd>w</kbd></td><td>grep da palavra sob o cursor (ou da seleção visual)</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>s</kbd><kbd>b</kbd></td><td>busca nas linhas do buffer atual</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>s</kbd><kbd>p</kbd></td><td>retoma a última busca, com os resultados de antes</td></tr>
+    <tr><td><kbd>/</kbd> / <kbd>?</kbd></td><td>busca nativa no arquivo, pra frente / pra trás. <kbd>n</kbd> e <kbd>N</kbd> navegam.</td></tr>
+    <tr><td><kbd>*</kbd> / <kbd>#</kbd></td><td>busca a palavra sob o cursor pra frente / pra trás — instantâneo, sem digitar</td></tr>
+  </table>
+  </div>
+
+  <h3>Dentro do picker</h3>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd>Ctrl</kbd>+<kbd>n</kbd> / <kbd>Ctrl</kbd>+<kbd>p</kbd></td><td>próximo / anterior resultado</td></tr>
+    <tr><td><kbd>Enter</kbd></td><td>abre</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>v</kbd> / <kbd>Ctrl</kbd>+<kbd>s</kbd></td><td>abre em split vertical / horizontal</td></tr>
+    <tr><td><kbd>Tab</kbd></td><td>marca múltiplos itens</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>q</kbd></td><td>joga <em>todos</em> os resultados na quickfix list</td></tr>
+    <tr><td><kbd>Esc</kbd></td><td>fecha</td></tr>
+  </table>
+  </div>
+
+  <h3>Outras coisas buscáveis</h3>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>s</kbd><kbd>k</kbd></td><td>todos os atalhos ativos</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>s</kbd><kbd>h</kbd></td><td>a documentação (<code>:help</code>)</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>s</kbd><kbd>d</kbd></td><td>todos os diagnostics do projeto</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>s</kbd><kbd>c</kbd></td><td>histórico de comandos</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>s</kbd><kbd>u</kbd></td><td>árvore de undo</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>s</kbd><kbd>m</kbd></td><td>marks</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>s</kbd><kbd>"</kbd></td><td>registradores (o que você copiou)</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>s</kbd><kbd>t</kbd></td><td>todos os <code>TODO</code>/<code>FIXME</code>/<code>HACK</code> do projeto</td></tr>
+  </table>
+  </div>
+</section>
+
+<!-- ══ 7. LSP ═════════════════════════════════════════ -->
+<section id="lsp">
+  <p class="eyebrow">Trilha · 07</p>
+  <h2>LSP — inteligência de código</h2>
+  <p class="lede">Vale pra qualquer linguagem com servidor configurado. Em Rust, quem fornece é o <code>rust-analyzer</code>.</p>
+
+  <h3>Navegar pelo código</h3>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd>g</kbd><kbd>d</kbd></td><td><strong>Ir pra definição.</strong> Funciona até dentro das dependências e da std.</td></tr>
+    <tr><td><kbd>g</kbd><kbd>r</kbd></td><td>todas as <strong>referências</strong> — quem chama isso</td></tr>
+    <tr><td><kbd>g</kbd><kbd>I</kbd></td><td>implementações (quem implementa este <code>trait</code>)</td></tr>
+    <tr><td><kbd>g</kbd><kbd>y</kbd></td><td>definição do <em>tipo</em> (não da variável — do tipo dela)</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>o</kbd></td><td>volta de onde veio</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>c</kbd><kbd>s</kbd></td><td>símbolos do arquivo — pule direto pra qualquer <code>fn</code>, <code>struct</code>, <code>impl</code></td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>c</kbd><kbd>S</kbd></td><td>símbolos do projeto inteiro</td></tr>
+  </table>
+  </div>
+
+  <h3>Entender</h3>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd>K</kbd></td><td><strong>Hover</strong>: tipo, assinatura e doc do item sob o cursor. Em Rust vem com ações — aperte <kbd>K</kbd> de novo pra entrar na janela e navegar pelos tipos mencionados.</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>c</kbd><kbd>d</kbd></td><td>abre o erro da linha por inteiro (útil quando o virtual text corta)</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>u</kbd><kbd>h</kbd></td><td>liga/desliga os <strong>inlay hints</strong> — os tipos inferidos que aparecem em cinza</td></tr>
+  </table>
+  </div>
+
+  <div class="panel key">
+    <div class="ph">Inlay hints em Rust</div>
+    <p>Vêm ligados por padrão, e são o maior ganho de produtividade da config. Você escreve <code>let x = foo();</code> e o editor mostra <code>let x</code><span style="color:var(--muted)">: Result&lt;Vec&lt;String&gt;, Error&gt;</span><code> = foo();</code> sem você pedir. Você para de precisar abrir a doc pra saber o que uma função devolve. Se a tela ficar poluída, <kbd class="lead">Espaço</kbd><kbd>u</kbd><kbd>h</kbd> desliga.</p>
+  </div>
+
+  <h3>Mudar</h3>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>c</kbd><kbd>r</kbd></td><td><strong>Renomear símbolo</strong> em todo o projeto, com consciência de escopo</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>c</kbd><kbd>a</kbd></td><td><strong>Code action.</strong> O menu de "conserta pra mim": importar o que falta, preencher os braços de um <code>match</code>, envolver em <code>Ok()</code>, derivar traits, extrair pra função.</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>c</kbd><kbd>f</kbd></td><td>formatar agora (já roda sozinho ao salvar)</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>c</kbd><kbd>l</kbd></td><td>roda o code lens sob o cursor (ex.: o "Run test" acima de um <code>#[test]</code>)</td></tr>
+  </table>
+  </div>
+
+  <div class="panel tip">
+    <div class="ph">O reflexo a treinar</div>
+    <p>Viu um sublinhado vermelho? <kbd class="lead">Espaço</kbd><kbd>c</kbd><kbd>a</kbd> antes de qualquer outra coisa. O <code>rust-analyzer</code> resolve a maioria dos erros sozinho — principalmente imports faltando e <code>match</code> não-exaustivo.</p>
+  </div>
+
+  <h3>Ver todos os erros de uma vez</h3>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>x</kbd><kbd>x</kbd></td><td>Trouble com todos os diagnostics do <strong>projeto</strong></td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>x</kbd><kbd>X</kbd></td><td>só do buffer atual</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>x</kbd><kbd>s</kbd></td><td>outline de símbolos do arquivo</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>u</kbd><kbd>d</kbd></td><td>silencia os diagnostics temporariamente (útil no meio de um refactor grande)</td></tr>
+  </table>
+  </div>
+
+  <h3>Autocomplete</h3>
+  <p>A config divide as teclas de propósito, pra não haver ambiguidade entre o que o compilador sabe e o que a IA acha:</p>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd>Ctrl</kbd>+<kbd>y</kbd></td><td><strong>aceita o item do LSP</strong> (o que está no menu)</td></tr>
+    <tr><td><kbd>Tab</kbd></td><td><strong>aceita a sugestão da IA</strong> (o texto fantasma cinza)</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>n</kbd> / <kbd>Ctrl</kbd>+<kbd>p</kbd></td><td>navega no menu</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>Espaço</kbd></td><td>abre o menu na marra / mostra a documentação do item</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>e</kbd></td><td>fecha o menu</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>b</kbd> / <kbd>Ctrl</kbd>+<kbd>f</kbd></td><td>rola a janela de documentação</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>l</kbd> / <kbd>Ctrl</kbd>+<kbd>h</kbd></td><td>próximo / anterior campo de um snippet</td></tr>
+  </table>
+  </div>
+</section>
+
+<!-- ══ 8. RUST ════════════════════════════════════════ -->
+<section id="rust">
+  <p class="eyebrow">Trilha · 08</p>
+  <h2>Rust no dia a dia</h2>
+  <p class="lede">Tudo sob <kbd class="lead">Espaço</kbd><kbd>r</kbd>. Só funciona em buffers <code>.rs</code>.</p>
+
+  <h3>Rodar e testar sem sair do editor</h3>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>r</kbd></td><td><strong>Runnables.</strong> Lista tudo que dá pra executar a partir de onde o cursor está: o binário, o teste sob o cursor, o módulo de testes, um benchmark. Escolha e ele roda num terminal.</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>R</kbd></td><td>repete o último runnable sem perguntar nada — <strong>o loop de TDD</strong></td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>t</kbd></td><td>só os testes</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>d</kbd></td><td>debuggables — como o runnables, mas anexa o debugger</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>L</kbd></td><td>repete o último debuggable</td></tr>
+  </table>
+  </div>
+
+  <div class="panel tip">
+    <div class="ph">O ciclo que vale treinar</div>
+    <p>Escreva o teste → <kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>r</kbd> e escolha ele uma vez → daí em diante só <kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>R</kbd> depois de cada alteração. Você nunca mais alterna pro terminal pra rodar <code>cargo test</code>.</p>
+  </div>
+
+  <h3>Entender o que o compilador está fazendo</h3>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>e</kbd></td><td><strong>Expandir macro.</strong> Põe o cursor num <code>#[derive(Serialize)]</code> ou <code>println!</code> e veja o código real que ele gera. Insubstituível pra debugar macro procedural.</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>E</kbd></td><td>explica o erro sob o cursor (o <code>rustc --explain E0502</code>, dentro do editor)</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>h</kbd></td><td>ver o <strong>HIR</strong> (representação de alto nível)</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>m</kbd></td><td>ver o <strong>MIR</strong> — útil quando você está brigando com o borrow checker e quer ver onde os empréstimos terminam</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>o</kbd></td><td>abre a página do <code>docs.rs</code> do item sob o cursor no navegador</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>g</kbd></td><td>grafo de dependências entre crates</td></tr>
+  </table>
+  </div>
+
+  <h3>Navegar no projeto</h3>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>p</kbd></td><td>vai pro módulo pai (de <code>foo/bar.rs</code> pro <code>mod bar;</code> em <code>foo/mod.rs</code>)</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>c</kbd></td><td>abre o <code>Cargo.toml</code> do crate atual</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>a</kbd></td><td>code actions agrupadas do <code>rust-analyzer</code> (mais completo que o <kbd class="lead">Espaço</kbd><kbd>c</kbd><kbd>a</kbd> genérico)</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>s</kbd></td><td><strong>SSR</strong> — busca e substituição estrutural. Ex.: <code>foo($a, $b) ==&gt;&gt; bar($b, $a)</code> troca a ordem dos argumentos em todas as chamadas, entendendo sintaxe.</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>j</kbd></td><td>join lines com consciência de sintaxe (junta e conserta vírgulas)</td></tr>
+  </table>
+  </div>
+
+  <h3>Cargo.toml</h3>
+  <p>Ao abrir um <code>Cargo.toml</code>, o <code>crates.nvim</code> anexa sozinho e mostra a versão mais recente ao lado de cada dependência:</p>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>c</kbd><kbd>v</kbd></td><td>todas as versões publicadas desta crate</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>c</kbd><kbd>f</kbd></td><td>as <strong>features</strong> disponíveis, com quais estão ativas</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>c</kbd><kbd>u</kbd></td><td>atualiza todas as deps pra versão mais nova</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>c</kbd><kbd>d</kbd></td><td>abre a documentação da crate</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>c</kbd><kbd>r</kbd></td><td>abre o repositório</td></tr>
+    <tr><td colspan="2" class="note">Digitando um nome de crate, o autocomplete busca no crates.io ao vivo.</td></tr>
+  </table>
+  </div>
+
+  <h3>Como a config trata o Rust</h3>
+  <ul>
+    <li><strong>Clippy em vez de check</strong> — ao salvar roda <code>cargo clippy</code>, não <code>cargo check</code>. Custo quase idêntico, mas você pega idiomatismo além de erro de tipo.</li>
+    <li><strong>Formata ao salvar</strong> com <code>rustfmt</code>. Pra desligar num arquivo específico: <code>:FormatToggle!</code>. Globalmente: <code>:FormatToggle</code>.</li>
+    <li><strong>Coluna 100</strong> marcada — o padrão do <code>rustfmt</code>.</li>
+    <li><strong>Autocomplete preenche argumentos</strong> — aceite uma função e ela vem com os parâmetros como placeholders; <kbd>Ctrl</kbd>+<kbd>l</kbd> pula entre eles.</li>
+    <li><strong>Completion postfix</strong> — digite <code>valor.ok</code> e aceite: vira <code>Ok(valor)</code>. Também <code>.some</code>, <code>.match</code>, <code>.if</code>, <code>.ref</code>.</li>
+    <li><strong>A pasta <code>target/</code> é ignorada</strong> pelo indexador e pela busca.</li>
+  </ul>
+</section>
+
+<!-- ══ 9. IA ══════════════════════════════════════════ -->
+<section id="ia">
+  <p class="eyebrow">Trilha · 09</p>
+  <h2>IA</h2>
+  <p class="lede">Duas camadas que não se sobrepõem — e essa separação é intencional.</p>
+
+  <div class="panel key">
+    <div class="ph">Por que só duas</div>
+    <p>Copilot, Supermaven, Codeium e os plugins de chat disputam o <em>mesmo</em> texto fantasma e a <em>mesma</em> tecla <kbd>Tab</kbd>. Instalar três é garantir sugestões piscando e atalhos que fazem coisas diferentes dependendo de quem respondeu primeiro. A config usa <strong>um</strong> plugin inline e <strong>um</strong> gerenciador de agentes — e esse gerenciador fala com todos os CLIs que você já tem.</p>
+  </div>
+
+  <h3>Camada 1 — Supermaven (inline)</h3>
+  <p>Completa enquanto você digita, em texto cinza à frente do cursor. Sub-100 ms, sem chamar nenhum agente.</p>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd>Tab</kbd></td><td>aceita a sugestão inteira</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>→</kbd></td><td>aceita só a próxima palavra (quando ele acertou o começo e errou o resto)</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>]</kbd></td><td>dispensa a sugestão</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>u</kbd><kbd>S</kbd></td><td>liga/desliga o Supermaven</td></tr>
+  </table>
+  </div>
+  <p>Na primeira vez rode <code>:SupermavenUseFree</code> (plano grátis) ou <code>:SupermavenUsePro</code>. Ele nunca sugere dentro de <code>.env</code>, <code>.pem</code> ou arquivos com "secret" no nome.</p>
+
+  <h3>Camada 2 — Sidekick (agentes)</h3>
+  <p>Abre um painel à direita com o <strong>CLI de verdade</strong> rodando — o mesmo <code>claude</code> que você usa no terminal, com suas sessões e sua assinatura. A diferença é que o Neovim injeta contexto automaticamente e recarrega os buffers quando o agente edita arquivos no disco.</p>
+
+  <div class="kt-wrap">
+  <table class="kt">
+    <caption>Abrir</caption>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>a</kbd><kbd>a</kbd></td><td>abre/fecha o painel (último agente usado)</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>a</kbd><kbd>c</kbd></td><td><strong>Claude Code</strong></td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>a</kbd><kbd>g</kbd></td><td>Gemini</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>a</kbd><kbd>x</kbd></td><td>Codex</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>a</kbd><kbd>o</kbd></td><td>opencode</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>a</kbd><kbd>y</kbd></td><td>agy</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>a</kbd><kbd>s</kbd></td><td>menu pra escolher entre os instalados</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>a</kbd><kbd>d</kbd></td><td>encerra a sessão</td></tr>
+  </table>
+  </div>
+
+  <div class="kt-wrap">
+  <table class="kt">
+    <caption>Mandar contexto</caption>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>a</kbd><kbd>t</kbd></td><td>manda "isto" — a função ou linha sob o cursor, com o caminho do arquivo</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>a</kbd><kbd>v</kbd></td><td>manda a <strong>seleção visual</strong></td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>a</kbd><kbd>f</kbd></td><td>manda o arquivo inteiro</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>a</kbd><kbd>p</kbd></td><td><strong>Menu de prompts prontos</strong> — veja abaixo</td></tr>
+  </table>
+  </div>
+
+  <h4>Os prompts prontos</h4>
+  <p><kbd class="lead">Espaço</kbd><kbd>a</kbd><kbd>p</kbd> abre uma lista onde o contexto já vem montado:</p>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><code>diagnostics</code></td><td>"me ajuda a consertar os erros deste arquivo" — <strong>com os erros do rust-analyzer colados junto</strong></td></tr>
+    <tr><td><code>changes</code></td><td>"revisa minhas alterações" (o diff do git)</td></tr>
+    <tr><td><code>explain</code></td><td>explica o trecho sob o cursor</td></tr>
+    <tr><td><code>fix</code></td><td>conserta isto</td></tr>
+    <tr><td><code>optimize</code></td><td>como otimizar isto</td></tr>
+    <tr><td><code>tests</code></td><td>escreve testes pra isto</td></tr>
+    <tr><td><code>document</code></td><td>adiciona doc comments</td></tr>
+    <tr><td><code>review</code></td><td>revisa o arquivo</td></tr>
+  </table>
+  </div>
+
+  <div class="panel tip">
+    <div class="ph">O fluxo que economiza mais tempo</div>
+    <p>Erro de borrow checker que você não entende: <kbd class="lead">Espaço</kbd><kbd>a</kbd><kbd>p</kbd> → <code>diagnostics</code>. O prompt já vai com o texto exato do erro, o arquivo e a linha. Você não copia nada, não alterna de janela, não explica o contexto.</p>
+  </div>
+
+  <div class="kt-wrap">
+  <table class="kt">
+    <caption>Dentro do painel</caption>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>.</kbd></td><td>alterna o foco entre o código e o agente (funciona de qualquer modo)</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>q</kbd></td><td>sai do modo terminal pro normal (pra rolar o histórico com <kbd>k</kbd>)</td></tr>
+    <tr><td><kbd>q</kbd> <span class="note">(em normal)</span></td><td>esconde o painel sem matar a sessão</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>f</kbd></td><td>abre o seletor de arquivos pra inserir um caminho no prompt</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>h</kbd></td><td>volta pra janela do código</td></tr>
+  </table>
+  </div>
+
+  <p><code>watch</code> está ligado: quando o agente edita um arquivo que você tem aberto, o buffer recarrega sozinho. Você vê as mudanças acontecerem.</p>
+</section>
+
+<!-- ══ 10. GIT ════════════════════════════════════════ -->
+<section id="git">
+  <p class="eyebrow">Trilha · 10</p>
+  <h2>Git</h2>
+
+  <h3>Lazygit</h3>
+  <p><kbd class="lead">Espaço</kbd><kbd>g</kbd><kbd>g</kbd> abre o lazygit em tela cheia. Para commits, rebase interativo, resolver conflito, cherry-pick — é melhor que qualquer plugin de git em Lua. Dentro dele: <kbd>?</kbd> mostra a ajuda, <kbd>q</kbd> sai.</p>
+
+  <h3>Hunks (no buffer)</h3>
+  <p>A coluna esquerda mostra o que mudou: <span style="color:var(--green)">▎</span> adicionado, <span style="color:var(--accent)">▎</span> modificado, <span style="color:var(--red)">▔</span> removido.</p>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd>]</kbd><kbd>h</kbd> / <kbd>[</kbd><kbd>h</kbd></td><td>próximo / anterior hunk</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>g</kbd><kbd>h</kbd><kbd>p</kbd></td><td>preview do hunk inline (vê o que era antes)</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>g</kbd><kbd>h</kbd><kbd>s</kbd></td><td>stage do hunk (funciona em seleção visual — stage parcial)</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>g</kbd><kbd>h</kbd><kbd>r</kbd></td><td>reverte o hunk</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>g</kbd><kbd>h</kbd><kbd>S</kbd></td><td>stage do arquivo inteiro</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>g</kbd><kbd>h</kbd><kbd>b</kbd></td><td>blame completo da linha (autor, commit, mensagem)</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>g</kbd><kbd>h</kbd><kbd>d</kbd></td><td>diff do arquivo lado a lado</td></tr>
+    <tr><td><kbd>d</kbd><kbd>i</kbd><kbd>h</kbd></td><td>textobject: apaga o hunk sob o cursor</td></tr>
+  </table>
+  </div>
+
+  <h3>Explorar o histórico</h3>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>g</kbd><kbd>l</kbd></td><td>log do projeto, buscável</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>g</kbd><kbd>L</kbd></td><td>log <strong>deste arquivo</strong> — ótimo pra entender por que uma linha existe</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>g</kbd><kbd>s</kbd></td><td>arquivos modificados</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>g</kbd><kbd>b</kbd></td><td>branches</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>g</kbd><kbd>B</kbd></td><td>abre a linha atual no GitHub/GitLab no navegador (funciona em seleção — gera link com range, pronto pra mandar pro time)</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>u</kbd><kbd>b</kbd></td><td>liga o blame permanente no fim de cada linha</td></tr>
+  </table>
+  </div>
+</section>
+
+<!-- ══ 11. DEBUG ══════════════════════════════════════ -->
+<section id="debug">
+  <p class="eyebrow">Trilha · 11</p>
+  <h2>Debug</h2>
+  <p class="lede">Breakpoints de verdade, com inspeção de variáveis. Via <code>codelldb</code>, já instalado pelo Mason.</p>
+
+  <h3>O caminho mais curto em Rust</h3>
+  <ol class="steps">
+    <li>Ponha o cursor na linha e <kbd class="lead">Espaço</kbd><kbd>d</kbd><kbd>b</kbd> pra marcar o breakpoint (aparece um <span style="color:var(--red)">●</span>)</li>
+    <li><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>d</kbd> e escolha o alvo (o binário ou um teste)</li>
+    <li>A interface abre sozinha: variáveis à esquerda, stack, watches, console</li>
+    <li>Os valores das variáveis aparecem <strong>inline</strong>, no fim de cada linha</li>
+  </ol>
+
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>d</kbd><kbd>b</kbd></td><td>liga/desliga breakpoint</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>d</kbd><kbd>B</kbd></td><td>breakpoint <strong>condicional</strong> — ex.: <code>i == 42</code>, pra parar só na iteração que importa</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>d</kbd><kbd>c</kbd></td><td>continua até o próximo breakpoint</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>d</kbd><kbd>o</kbd></td><td>step over (executa a linha)</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>d</kbd><kbd>i</kbd></td><td>step into (entra na função)</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>d</kbd><kbd>O</kbd></td><td>step out (sai da função)</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>d</kbd><kbd>e</kbd></td><td><strong>avalia a expressão</strong> sob o cursor (ou a seleção)</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>d</kbd><kbd>r</kbd></td><td>REPL do debugger</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>d</kbd><kbd>u</kbd></td><td>mostra/esconde a interface</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>d</kbd><kbd>t</kbd></td><td>encerra a sessão</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>d</kbd><kbd>l</kbd></td><td>roda a última configuração de novo</td></tr>
+  </table>
+  </div>
+
+  <div class="panel warn">
+    <div class="ph">Compile em debug</div>
+    <p>O <code>cargo build --release</code> descarta os símbolos e otimiza o código — o debugger vai pular linhas e mostrar variáveis "optimized out". Pra debugar, use o perfil dev (o padrão).</p>
+  </div>
+</section>
+
+<!-- ══ 12. JANELAS ════════════════════════════════════ -->
+<section id="janelas">
+  <p class="eyebrow">Trilha · 12</p>
+  <h2>Janelas, buffers e abas</h2>
+
+  <div class="panel key">
+    <div class="ph">Os três conceitos</div>
+    <p><strong>Buffer</strong> = um arquivo carregado em memória. <strong>Janela</strong> = uma viewport que mostra um buffer. <strong>Aba</strong> = um <em>layout</em> de janelas.<br>
+    Fechar uma janela não fecha o buffer. Você pode ter 40 buffers abertos e 2 janelas — e isso é o uso normal, não um problema.</p>
+  </div>
+
+  <h3>Buffers</h3>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd>Shift</kbd>+<kbd>h</kbd> / <kbd>Shift</kbd>+<kbd>l</kbd></td><td>buffer anterior / próximo</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>b</kbd><kbd>b</kbd></td><td><strong>alterna com o último buffer</strong> — o Alt+Tab do editor, o atalho mais usado depois do picker</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>f</kbd><kbd>b</kbd></td><td>lista de buffers, buscável</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>b</kbd><kbd>d</kbd></td><td>fecha o buffer <strong>mantendo o layout</strong> (o <code>:bd</code> puro destrói a janela)</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>b</kbd><kbd>o</kbd></td><td>fecha todos os <em>outros</em> — a faxina de fim de tarefa</td></tr>
+  </table>
+  </div>
+
+  <h3>Janelas</h3>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>|</kbd></td><td>split vertical (abre à direita)</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>-</kbd></td><td>split horizontal (abre abaixo)</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>h</kbd>/<kbd>j</kbd>/<kbd>k</kbd>/<kbd>l</kbd></td><td>move o foco entre janelas</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>←</kbd>/<kbd>→</kbd>/<kbd>↑</kbd>/<kbd>↓</kbd></td><td>redimensiona</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>w</kbd><kbd>=</kbd></td><td>iguala todas</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>w</kbd><kbd>o</kbd></td><td>fecha todas menos a atual</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>w</kbd><kbd>x</kbd></td><td>troca as janelas de posição</td></tr>
+  </table>
+  </div>
+
+  <h3>Terminal</h3>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd>Ctrl</kbd>+<kbd>/</kbd></td><td>terminal flutuante (abre e fecha com a mesma tecla)</td></tr>
+    <tr><td><kbd>Esc</kbd><kbd>Esc</kbd></td><td>dentro do terminal, volta pro modo normal pra rolar/copiar</td></tr>
+  </table>
+  </div>
+
+  <h3>Sessões</h3>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>q</kbd><kbd>s</kbd></td><td>restaura a sessão deste diretório — janelas, buffers, posição do cursor</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>q</kbd><kbd>l</kbd></td><td>restaura a última sessão, de qualquer diretório</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>q</kbd><kbd>d</kbd></td><td>não salvar a sessão ao sair desta vez</td></tr>
+  </table>
+  </div>
+  <p>No dashboard (a tela inicial), <kbd>s</kbd> também restaura a sessão. Fluxo: <code>cd projeto &amp;&amp; nvim</code> → <kbd>s</kbd> → você está exatamente onde parou ontem.</p>
+</section>
+
+<!-- ══ 13. PODER ══════════════════════════════════════ -->
+<section id="poder">
+  <p class="eyebrow">Trilha · 13</p>
+  <h2>Macros, registradores e marks</h2>
+  <p class="lede">A parte que quase ninguém aprende — e que resolve tarefas repetitivas em segundos.</p>
+
+  <h3>Registradores</h3>
+  <p>O Vim tem 26 áreas de transferência nomeadas, <code>a</code> a <code>z</code>. Prefixe qualquer verbo com <kbd>"</kbd> e a letra:</p>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd>"</kbd><kbd>a</kbd><kbd>y</kbd><kbd>y</kbd></td><td>copia a linha pro registrador <code>a</code></td></tr>
+    <tr><td><kbd>"</kbd><kbd>a</kbd><kbd>p</kbd></td><td>cola o registrador <code>a</code></td></tr>
+    <tr><td><kbd>"</kbd><kbd>A</kbd><kbd>y</kbd><kbd>y</kbd></td><td>maiúscula <strong>acrescenta</strong> ao registrador em vez de substituir — colete 5 linhas espalhadas e cole todas juntas</td></tr>
+    <tr><td><kbd>"</kbd><kbd>0</kbd><kbd>p</kbd></td><td>cola o <strong>último yank</strong>, mesmo que você tenha deletado coisas depois. <strong>Salva-vidas.</strong></td></tr>
+    <tr><td><kbd>"</kbd><kbd>+</kbd><kbd>y</kbd></td><td>copia pro clipboard do sistema (na sua config o <kbd>y</kbd> normal já faz isso)</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>s</kbd><kbd>"</kbd></td><td>ver o conteúdo de todos os registradores</td></tr>
+  </table>
+  </div>
+
+  <h3>Macros</h3>
+  <p>Gravar uma sequência de comandos e repetir N vezes:</p>
+  <ol class="steps">
+    <li><kbd>q</kbd><kbd>a</kbd> — começa a gravar no registrador <code>a</code> (aparece "recording" na statusline)</li>
+    <li>Faça a edição <strong>uma vez</strong>, terminando com o cursor posicionado pra próxima repetição (normalmente <kbd>j</kbd><kbd>0</kbd>)</li>
+    <li><kbd>q</kbd> — para de gravar</li>
+    <li><kbd>@</kbd><kbd>a</kbd> — executa uma vez. <kbd>@</kbd><kbd>@</kbd> repete a última macro.</li>
+    <li><kbd>5</kbd><kbd>0</kbd><kbd>@</kbd><kbd>a</kbd> — executa 50 vezes</li>
+  </ol>
+
+  <div class="panel tip">
+    <div class="ph">A macro em todas as linhas de uma vez</div>
+    <p>Selecione as linhas em visual (<kbd>V</kbd>) e rode <code>:normal @a</code>. A macro é aplicada em cada linha selecionada. Muito mais previsível que contar quantas vezes repetir.</p>
+  </div>
+
+  <p>Macro gravada errado? Ela é só texto num registrador: <kbd>"</kbd><kbd>a</kbd><kbd>p</kbd> cola a macro numa linha, você edita como texto normal, e <kbd>"</kbd><kbd>a</kbd><kbd>y</kbd><kbd>y</kbd> grava de volta.</p>
+
+  <h3>Marks</h3>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd>m</kbd><kbd>a</kbd></td><td>marca a posição como <code>a</code> (minúsculas = dentro do arquivo)</td></tr>
+    <tr><td><kbd>'</kbd><kbd>a</kbd></td><td>volta pra linha da marca <code>a</code></td></tr>
+    <tr><td><kbd>m</kbd><kbd>A</kbd></td><td>maiúscula = mark <strong>global</strong>, funciona entre arquivos</td></tr>
+    <tr><td><kbd>'</kbd><kbd>.</kbd></td><td>vai pra última posição editada</td></tr>
+    <tr><td><kbd>'</kbd><kbd>'</kbd></td><td>alterna com a posição anterior</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>s</kbd><kbd>m</kbd></td><td>lista todas as marks</td></tr>
+  </table>
+  </div>
+  <p>Uso real: está implementando um <code>trait</code> em um arquivo e consultando a definição em outro? <kbd>m</kbd><kbd>A</kbd> num, <kbd>m</kbd><kbd>B</kbd> no outro, e alterne com <kbd>'</kbd><kbd>A</kbd> / <kbd>'</kbd><kbd>B</kbd>.</p>
+</section>
+
+<!-- ══ 14. QUICKFIX ═══════════════════════════════════ -->
+<section id="quickfix">
+  <p class="eyebrow">Trilha · 14</p>
+  <h2>Quickfix</h2>
+  <p class="lede">Uma lista de posições no código (arquivo + linha) que você percorre uma a uma. É o mecanismo por trás de "corrigir 30 ocorrências em 12 arquivos".</p>
+
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><kbd>Ctrl</kbd>+<kbd>q</kbd> <span class="note">(no picker)</span></td><td><strong>joga todos os resultados da busca na quickfix</strong></td></tr>
+    <tr><td><kbd>]</kbd><kbd>q</kbd> / <kbd>[</kbd><kbd>q</kbd></td><td>próximo / anterior item</td></tr>
+    <tr><td><code>:copen</code> / <code>:cclose</code></td><td>abre / fecha a lista</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>x</kbd><kbd>Q</kbd></td><td>a quickfix no Trouble, com preview</td></tr>
+    <tr><td><code>:cdo {cmd}</code></td><td><strong>roda um comando em cada item</strong> da lista</td></tr>
+  </table>
+  </div>
+
+  <h4>O fluxo completo</h4>
+  <ol class="steps">
+    <li><kbd class="lead">Espaço</kbd><kbd>s</kbd><kbd>g</kbd> e busque <code>unwrap()</code></li>
+    <li><kbd>Ctrl</kbd>+<kbd>q</kbd> — todas as ocorrências vão pra quickfix</li>
+    <li><code>:cdo s/unwrap()/expect("motivo")/g | update</code></li>
+    <li>Pronto. O <code>| update</code> salva cada arquivo alterado.</li>
+  </ol>
+  <p>Ou, se quiser olhar um por um: <kbd>]</kbd><kbd>q</kbd> pra navegar, editar, <kbd>]</kbd><kbd>q</kbd> de novo.</p>
+</section>
+
+<hr>
+
+<!-- ══ RECEITAS ═══════════════════════════════════════ -->
+<section id="receitas">
+  <p class="eyebrow">Referência</p>
+  <h2>Receitas do dia a dia</h2>
+  <p class="lede">Tarefas reais, resolvidas de ponta a ponta.</p>
+
+  <details class="recipe">
+    <summary>Começar a trabalhar num projeto Rust</summary>
+    <div class="body">
+      <ol class="steps">
+        <li><code>cd ~/projetos/meu-crate &amp;&amp; nvim</code></li>
+        <li>No dashboard, <kbd>s</kbd> pra restaurar a sessão de ontem (ou <kbd>f</kbd> pra buscar um arquivo)</li>
+        <li>Espere o <code>rust-analyzer</code> terminar de indexar (barra no canto inferior direito)</li>
+        <li><kbd class="lead">Espaço</kbd><kbd>x</kbd><kbd>x</kbd> pra ver o estado geral: quantos erros e warnings existem</li>
+      </ol>
+    </div>
+  </details>
+
+  <details class="recipe">
+    <summary>"Onde diabos essa função é usada?"</summary>
+    <div class="body">
+      <p>Cursor no nome da função → <kbd>g</kbd><kbd>r</kbd>. Lista de todas as chamadas. <kbd>Enter</kbd> vai pra uma delas, <kbd>Ctrl</kbd>+<kbd>o</kbd> volta.</p>
+      <p>Se forem muitas e você quiser percorrer com calma: <kbd class="lead">Espaço</kbd><kbd>x</kbd><kbd>l</kbd> abre no Trouble, num painel lateral que fica aberto enquanto você navega.</p>
+    </div>
+  </details>
+
+  <details class="recipe">
+    <summary>Adicionar uma dependência</summary>
+    <div class="body">
+      <ol class="steps">
+        <li><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>c</kbd> abre o <code>Cargo.toml</code></li>
+        <li>Vá até <code>[dependencies]</code>, <kbd>o</kbd> pra abrir uma linha</li>
+        <li>Digite o nome — o autocomplete busca no crates.io ao vivo</li>
+        <li>Depois do <code>=</code>, o autocomplete oferece as versões</li>
+        <li><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>c</kbd><kbd>f</kbd> pra ver e escolher as features</li>
+        <li>Salve. O <code>rust-analyzer</code> reindexa sozinho.</li>
+      </ol>
+    </div>
+  </details>
+
+  <details class="recipe">
+    <summary>Erro do borrow checker que você não entende</summary>
+    <div class="body">
+      <ol class="steps">
+        <li><kbd class="lead">Espaço</kbd><kbd>c</kbd><kbd>d</kbd> — lê o erro completo</li>
+        <li><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>E</kbd> — a explicação oficial do <code>rustc</code> pra esse código de erro</li>
+        <li>Ainda confuso? <kbd class="lead">Espaço</kbd><kbd>c</kbd><kbd>a</kbd> — o <code>rust-analyzer</code> às vezes já sabe a correção</li>
+        <li>Sem jeito: <kbd class="lead">Espaço</kbd><kbd>a</kbd><kbd>p</kbd> → <code>diagnostics</code>. O Claude recebe o erro, o arquivo e a linha, sem você copiar nada.</li>
+      </ol>
+    </div>
+  </details>
+
+  <details class="recipe">
+    <summary>Loop de TDD</summary>
+    <div class="body">
+      <ol class="steps">
+        <li>Escreva o <code>#[test]</code></li>
+        <li><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>r</kbd> e escolha o teste (só nesta primeira vez)</li>
+        <li>Implemente</li>
+        <li><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>R</kbd> — roda o mesmo teste sem perguntar</li>
+        <li>Repita o 3 e o 4. Nunca saia do editor.</li>
+      </ol>
+      <p>Teste falhando de um jeito misterioso? Breakpoint com <kbd class="lead">Espaço</kbd><kbd>d</kbd><kbd>b</kbd> e <kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>d</kbd> pra rodar ele no debugger.</p>
+    </div>
+  </details>
+
+  <details class="recipe">
+    <summary>Renomear um conceito no projeto inteiro</summary>
+    <div class="body">
+      <p><strong>Se for um símbolo Rust</strong> (struct, fn, variável): cursor nele → <kbd class="lead">Espaço</kbd><kbd>c</kbd><kbd>r</kbd> → digite o nome novo → <kbd>Enter</kbd>. O LSP renomeia em todos os arquivos, respeitando escopo, sem tocar em strings.</p>
+      <p><strong>Se for texto</strong> (uma chave de config, uma mensagem): <kbd class="lead">Espaço</kbd><kbd>s</kbd><kbd>R</kbd> abre o grug-far com preview de todas as ocorrências antes de aplicar.</p>
+    </div>
+  </details>
+
+  <details class="recipe">
+    <summary>Revisar o próprio código antes do commit</summary>
+    <div class="body">
+      <ol class="steps">
+        <li><kbd class="lead">Espaço</kbd><kbd>g</kbd><kbd>s</kbd> — os arquivos que você mexeu</li>
+        <li>Em cada um, <kbd>]</kbd><kbd>h</kbd> percorre os hunks e <kbd class="lead">Espaço</kbd><kbd>g</kbd><kbd>h</kbd><kbd>p</kbd> mostra o antes</li>
+        <li><kbd class="lead">Espaço</kbd><kbd>a</kbd><kbd>p</kbd> → <code>changes</code> pra uma revisão da IA sobre o diff</li>
+        <li><kbd class="lead">Espaço</kbd><kbd>g</kbd><kbd>g</kbd> pro lazygit, e faça o commit</li>
+      </ol>
+    </div>
+  </details>
+
+  <details class="recipe">
+    <summary>Entender um código alheio</summary>
+    <div class="body">
+      <ol class="steps">
+        <li><kbd class="lead">Espaço</kbd><kbd>c</kbd><kbd>s</kbd> — outline do arquivo, pra ver a forma geral</li>
+        <li>Inlay hints ligados mostram todos os tipos inferidos — metade do entendimento vem daí</li>
+        <li><kbd>g</kbd><kbd>d</kbd> pra descer nas definições, <kbd>Ctrl</kbd>+<kbd>o</kbd> pra voltar</li>
+        <li><kbd class="lead">Espaço</kbd><kbd>g</kbd><kbd>L</kbd> — o histórico do arquivo diz <em>por que</em> aquilo existe</li>
+        <li>Trecho denso: <kbd>v</kbd><kbd>i</kbd><kbd>f</kbd> pra selecionar, <kbd class="lead">Espaço</kbd><kbd>a</kbd><kbd>p</kbd> → <code>explain</code></li>
+      </ol>
+    </div>
+  </details>
+
+  <details class="recipe">
+    <summary>Uma macro procedural não está gerando o que você espera</summary>
+    <div class="body">
+      <p>Cursor no <code>#[derive(...)]</code> ou na invocação da macro → <kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>e</kbd>. Abre um buffer com o código realmente gerado. É a forma mais direta de descobrir por que aquele <code>impl</code> que você esperava não existe.</p>
+    </div>
+  </details>
+
+  <details class="recipe">
+    <summary>Mesma edição em 30 linhas</summary>
+    <div class="body">
+      <p><strong>Se for idêntica e em coluna</strong> (adicionar <code>pub</code>, um prefixo): <kbd>Ctrl</kbd>+<kbd>v</kbd>, desça, <kbd>I</kbd>, digite, <kbd>Esc</kbd>.</p>
+      <p><strong>Se envolver lógica</strong>: grave uma macro. <kbd>q</kbd><kbd>a</kbd> → faça numa linha → <kbd>q</kbd> → selecione as outras com <kbd>V</kbd> → <code>:normal @a</code>.</p>
+      <p><strong>Se for busca e substituição</strong>: <kbd class="lead">Espaço</kbd><kbd>s</kbd><kbd>g</kbd> → <kbd>Ctrl</kbd>+<kbd>q</kbd> → <code>:cdo s/velho/novo/g | update</code>.</p>
+    </div>
+  </details>
+
+  <details class="recipe">
+    <summary>Mandar um trecho específico pro Claude</summary>
+    <div class="body">
+      <ol class="steps">
+        <li><kbd>v</kbd><kbd>i</kbd><kbd>f</kbd> (a função) ou <kbd>v</kbd><kbd>i</kbd><kbd>c</kbd> (o <code>impl</code> inteiro)</li>
+        <li><kbd class="lead">Espaço</kbd><kbd>a</kbd><kbd>v</kbd> — manda a seleção com o caminho do arquivo junto</li>
+        <li>Escreva a pergunta no painel</li>
+        <li><kbd>Ctrl</kbd>+<kbd>.</kbd> volta pro código sem fechar nada</li>
+      </ol>
+    </div>
+  </details>
+
+  <details class="recipe">
+    <summary>"O editor ficou lento"</summary>
+    <div class="body">
+      <ul>
+        <li>Arquivo gigante? O <code>bigfile</code> do snacks desliga treesitter e LSP sozinho acima de ~1,5 MB.</li>
+        <li><code>:Lazy profile</code> mostra o tempo de carga de cada plugin.</li>
+        <li><code>:LspInfo</code> — se houver dois <code>rust-analyzer</code> rodando, você abriu o nvim de dentro de um subdiretório e ele detectou duas raízes.</li>
+        <li>Inlay hints em arquivo muito grande pesam: <kbd class="lead">Espaço</kbd><kbd>u</kbd><kbd>h</kbd>.</li>
+      </ul>
+    </div>
+  </details>
+</section>
+
+</div><!-- /wrap -->
+
+<!-- ══ CHEATSHEET ═════════════════════════════════════ -->
+<div class="wide">
+<section id="cheatsheet">
+  <p class="eyebrow">Referência</p>
+  <h2>Cheatsheet completa</h2>
+  <p class="lede">Todos os atalhos da config num lugar só. Use a busca — ela filtra por tecla <em>e</em> por descrição.</p>
+
+  <div class="searchbar">
+    <input type="search" id="q" placeholder="filtrar:  rust · git · debug · buffer · ia · testar · renomear ..." aria-label="Filtrar atalhos">
+    <span class="hitcount" id="hits"></span>
+  </div>
+
+  <div class="kt-wrap">
+  <table class="kt" id="sheet">
+    <caption>Essencial</caption>
+    <tbody>
+    <tr><td><kbd class="lead">Espaço</kbd></td><td>segure pra ver todos os atalhos (which-key)</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>Espaço</kbd></td><td>buscar arquivo</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>w</kbd></td><td>salvar</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>W</kbd></td><td>salvar tudo</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>q</kbd><kbd>q</kbd></td><td>sair de tudo</td></tr>
+    <tr><td><kbd>j</kbd><kbd>k</kbd></td><td>sair do modo insert</td></tr>
+    <tr><td><kbd>Esc</kbd></td><td>limpar o highlight da busca</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>?</kbd></td><td>atalhos específicos deste buffer</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>L</kbd></td><td>gerenciador de plugins (Lazy)</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>M</kbd></td><td>Mason — LSPs e ferramentas</td></tr>
+    </tbody>
+
+    <tbody>
+    <tr><td colspan="2"><strong>Buscar e navegar</strong></td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>f</kbd><kbd>f</kbd></td><td>buscar arquivo</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>f</kbd><kbd>g</kbd></td><td>arquivos versionados no git</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>f</kbd><kbd>r</kbd></td><td>arquivos recentes</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>f</kbd><kbd>b</kbd></td><td>buffers abertos</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>f</kbd><kbd>e</kbd></td><td>explorer em árvore</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>f</kbd><kbd>c</kbd></td><td>abrir a config do neovim</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>f</kbd><kbd>p</kbd></td><td>projetos</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>f</kbd><kbd>t</kbd></td><td>terminal flutuante</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>f</kbd><kbd>y</kbd></td><td>copiar caminho do arquivo</td></tr>
+    <tr><td><kbd>-</kbd></td><td>oil — editar o diretório como buffer</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>s</kbd><kbd>g</kbd></td><td>grep no projeto</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>s</kbd><kbd>w</kbd></td><td>grep da palavra sob o cursor</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>s</kbd><kbd>b</kbd></td><td>buscar nas linhas do buffer</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>s</kbd><kbd>p</kbd></td><td>retomar a última busca</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>s</kbd><kbd>k</kbd></td><td>todos os atalhos</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>s</kbd><kbd>h</kbd></td><td>documentação (:help)</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>s</kbd><kbd>d</kbd></td><td>diagnostics do projeto</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>s</kbd><kbd>c</kbd></td><td>histórico de comandos</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>s</kbd><kbd>u</kbd></td><td>árvore de undo</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>s</kbd><kbd>m</kbd></td><td>marks</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>s</kbd><kbd>q</kbd></td><td>quickfix</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>s</kbd><kbd>t</kbd></td><td>TODOs do projeto</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>s</kbd><kbd>r</kbd></td><td>search &amp; replace no arquivo (grug-far)</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>s</kbd><kbd>R</kbd></td><td>search &amp; replace no projeto</td></tr>
+    <tr><td><kbd>s</kbd></td><td>flash — pular pra qualquer lugar visível</td></tr>
+    <tr><td><kbd>S</kbd></td><td>flash treesitter — selecionar nó da árvore</td></tr>
+    </tbody>
+
+    <tbody>
+    <tr><td colspan="2"><strong>Código (LSP)</strong></td></tr>
+    <tr><td><kbd>g</kbd><kbd>d</kbd></td><td>ir pra definição</td></tr>
+    <tr><td><kbd>g</kbd><kbd>D</kbd></td><td>ir pra declaração</td></tr>
+    <tr><td><kbd>g</kbd><kbd>r</kbd></td><td>referências</td></tr>
+    <tr><td><kbd>g</kbd><kbd>I</kbd></td><td>implementações</td></tr>
+    <tr><td><kbd>g</kbd><kbd>y</kbd></td><td>definição do tipo</td></tr>
+    <tr><td><kbd>K</kbd></td><td>hover — doc e tipo</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>c</kbd><kbd>r</kbd></td><td>renomear símbolo</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>c</kbd><kbd>a</kbd></td><td>code action — consertar automaticamente</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>c</kbd><kbd>f</kbd></td><td>formatar</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>c</kbd><kbd>d</kbd></td><td>detalhe do erro da linha</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>c</kbd><kbd>s</kbd></td><td>símbolos do arquivo</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>c</kbd><kbd>S</kbd></td><td>símbolos do projeto</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>c</kbd><kbd>l</kbd></td><td>rodar code lens</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>c</kbd><kbd>n</kbd><kbd>a</kbd></td><td>trocar com o próximo argumento</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>c</kbd><kbd>p</kbd><kbd>a</kbd></td><td>trocar com o argumento anterior</td></tr>
+    <tr><td><kbd>]</kbd><kbd>d</kbd> <kbd>[</kbd><kbd>d</kbd></td><td>próximo / anterior diagnostic</td></tr>
+    <tr><td><kbd>]</kbd><kbd>e</kbd> <kbd>[</kbd><kbd>e</kbd></td><td>próximo / anterior erro</td></tr>
+    <tr><td><kbd>]</kbd><kbd>w</kbd> <kbd>[</kbd><kbd>w</kbd></td><td>próximo / anterior warning</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>x</kbd><kbd>x</kbd></td><td>diagnostics do projeto (trouble)</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>x</kbd><kbd>X</kbd></td><td>diagnostics do buffer</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>x</kbd><kbd>s</kbd></td><td>outline de símbolos</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>x</kbd><kbd>l</kbd></td><td>definições e referências (painel)</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>x</kbd><kbd>Q</kbd></td><td>quickfix no trouble</td></tr>
+    </tbody>
+
+    <tbody>
+    <tr><td colspan="2"><strong>Rust</strong></td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>r</kbd></td><td>runnables — rodar binário ou teste</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>R</kbd></td><td>repetir o último runnable</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>t</kbd></td><td>testables</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>d</kbd></td><td>debuggables</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>L</kbd></td><td>repetir o último debuggable</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>a</kbd></td><td>code actions do rust-analyzer</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>e</kbd></td><td>expandir macro</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>E</kbd></td><td>explicar erro (rustc --explain)</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>c</kbd></td><td>abrir Cargo.toml</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>p</kbd></td><td>ir pro módulo pai</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>o</kbd></td><td>abrir docs.rs do item</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>m</kbd></td><td>ver MIR</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>h</kbd></td><td>ver HIR</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>g</kbd></td><td>grafo de crates</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>s</kbd></td><td>structural search &amp; replace</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>j</kbd></td><td>join lines inteligente</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>c</kbd><kbd>v</kbd></td><td>crates — versões</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>c</kbd><kbd>f</kbd></td><td>crates — features</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>c</kbd><kbd>u</kbd></td><td>crates — atualizar todas</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>c</kbd><kbd>d</kbd></td><td>crates — abrir documentação</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>r</kbd><kbd>c</kbd><kbd>r</kbd></td><td>crates — abrir repositório</td></tr>
+    </tbody>
+
+    <tbody>
+    <tr><td colspan="2"><strong>IA</strong></td></tr>
+    <tr><td><kbd>Tab</kbd></td><td>aceitar sugestão inline da IA</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>→</kbd></td><td>aceitar só a próxima palavra</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>]</kbd></td><td>dispensar sugestão</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>a</kbd><kbd>a</kbd></td><td>abrir/fechar painel de IA</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>a</kbd><kbd>c</kbd></td><td>Claude Code</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>a</kbd><kbd>g</kbd></td><td>Gemini</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>a</kbd><kbd>x</kbd></td><td>Codex</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>a</kbd><kbd>o</kbd></td><td>opencode</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>a</kbd><kbd>y</kbd></td><td>agy</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>a</kbd><kbd>s</kbd></td><td>escolher agente</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>a</kbd><kbd>d</kbd></td><td>encerrar sessão da IA</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>a</kbd><kbd>t</kbd></td><td>mandar a função/linha sob o cursor</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>a</kbd><kbd>v</kbd></td><td>mandar a seleção visual</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>a</kbd><kbd>f</kbd></td><td>mandar o arquivo inteiro</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>a</kbd><kbd>p</kbd></td><td>menu de prompts prontos</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>.</kbd></td><td>alternar foco código ↔ agente</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>u</kbd><kbd>S</kbd></td><td>ligar/desligar autocomplete da IA</td></tr>
+    </tbody>
+
+    <tbody>
+    <tr><td colspan="2"><strong>Git</strong></td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>g</kbd><kbd>g</kbd></td><td>lazygit</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>g</kbd><kbd>l</kbd></td><td>log do projeto</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>g</kbd><kbd>L</kbd></td><td>log deste arquivo</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>g</kbd><kbd>s</kbd></td><td>arquivos modificados</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>g</kbd><kbd>b</kbd></td><td>branches</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>g</kbd><kbd>B</kbd></td><td>abrir no GitHub/GitLab</td></tr>
+    <tr><td><kbd>]</kbd><kbd>h</kbd> <kbd>[</kbd><kbd>h</kbd></td><td>próximo / anterior hunk</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>g</kbd><kbd>h</kbd><kbd>p</kbd></td><td>preview do hunk</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>g</kbd><kbd>h</kbd><kbd>s</kbd></td><td>stage do hunk</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>g</kbd><kbd>h</kbd><kbd>r</kbd></td><td>reverter o hunk</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>g</kbd><kbd>h</kbd><kbd>S</kbd></td><td>stage do arquivo</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>g</kbd><kbd>h</kbd><kbd>u</kbd></td><td>desfazer stage</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>g</kbd><kbd>h</kbd><kbd>b</kbd></td><td>blame da linha</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>g</kbd><kbd>h</kbd><kbd>d</kbd></td><td>diff do arquivo</td></tr>
+    <tr><td><kbd>i</kbd><kbd>h</kbd></td><td>textobject do hunk</td></tr>
+    </tbody>
+
+    <tbody>
+    <tr><td colspan="2"><strong>Debug</strong></td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>d</kbd><kbd>b</kbd></td><td>breakpoint</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>d</kbd><kbd>B</kbd></td><td>breakpoint condicional</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>d</kbd><kbd>c</kbd></td><td>continuar / iniciar</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>d</kbd><kbd>o</kbd></td><td>step over</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>d</kbd><kbd>i</kbd></td><td>step into</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>d</kbd><kbd>O</kbd></td><td>step out</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>d</kbd><kbd>e</kbd></td><td>avaliar expressão</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>d</kbd><kbd>r</kbd></td><td>REPL</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>d</kbd><kbd>u</kbd></td><td>mostrar/esconder interface</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>d</kbd><kbd>l</kbd></td><td>rodar o último</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>d</kbd><kbd>t</kbd></td><td>encerrar sessão</td></tr>
+    </tbody>
+
+    <tbody>
+    <tr><td colspan="2"><strong>Buffers, janelas, sessões</strong></td></tr>
+    <tr><td><kbd>Shift</kbd>+<kbd>h</kbd> <kbd>Shift</kbd>+<kbd>l</kbd></td><td>buffer anterior / próximo</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>b</kbd><kbd>b</kbd></td><td>alternar com o último buffer</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>b</kbd><kbd>d</kbd></td><td>fechar buffer</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>b</kbd><kbd>o</kbd></td><td>fechar os outros buffers</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>|</kbd></td><td>split vertical</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>-</kbd></td><td>split horizontal</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>h</kbd><kbd>j</kbd><kbd>k</kbd><kbd>l</kbd></td><td>mover entre janelas</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>/</kbd></td><td>terminal flutuante</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>q</kbd><kbd>s</kbd></td><td>restaurar sessão deste diretório</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>q</kbd><kbd>l</kbd></td><td>restaurar a última sessão</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>q</kbd><kbd>d</kbd></td><td>não salvar sessão ao sair</td></tr>
+    </tbody>
+
+    <tbody>
+    <tr><td colspan="2"><strong>Toggles de interface</strong></td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>u</kbd><kbd>h</kbd></td><td>inlay hints (tipos inferidos)</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>u</kbd><kbd>d</kbd></td><td>diagnostics</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>u</kbd><kbd>w</kbd></td><td>quebra de linha</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>u</kbd><kbd>r</kbd></td><td>números relativos</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>u</kbd><kbd>l</kbd></td><td>números de linha</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>u</kbd><kbd>b</kbd></td><td>blame do git na linha</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>u</kbd><kbd>i</kbd></td><td>guias de indentação</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>u</kbd><kbd>t</kbd></td><td>contexto do treesitter (topo da tela)</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>u</kbd><kbd>z</kbd></td><td>modo zen (sem distrações)</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>u</kbd><kbd>D</kbd></td><td>escurecer o código fora do foco</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>u</kbd><kbd>s</kbd></td><td>corretor ortográfico</td></tr>
+    <tr><td><kbd class="lead">Espaço</kbd><kbd>u</kbd><kbd>n</kbd></td><td>dispensar notificações</td></tr>
+    </tbody>
+
+    <tbody>
+    <tr><td colspan="2"><strong>Vim puro que vale saber</strong></td></tr>
+    <tr><td><kbd>.</kbd></td><td>repetir a última alteração</td></tr>
+    <tr><td><kbd>u</kbd> / <kbd>Ctrl</kbd>+<kbd>r</kbd></td><td>desfazer / refazer</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>o</kbd> / <kbd>Ctrl</kbd>+<kbd>i</kbd></td><td>voltar / avançar na jumplist</td></tr>
+    <tr><td><kbd>*</kbd> / <kbd>#</kbd></td><td>buscar a palavra sob o cursor</td></tr>
+    <tr><td><kbd>%</kbd></td><td>pular pro par de delimitador</td></tr>
+    <tr><td><kbd>f</kbd><kbd>x</kbd> / <kbd>t</kbd><kbd>x</kbd></td><td>pular pro caractere x na linha</td></tr>
+    <tr><td><kbd>;</kbd> / <kbd>,</kbd></td><td>repetir o f/t pra frente / pra trás</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>v</kbd></td><td>seleção em bloco (colunas)</td></tr>
+    <tr><td><kbd>Ctrl</kbd>+<kbd>a</kbd> / <kbd>Ctrl</kbd>+<kbd>x</kbd></td><td>incrementar / decrementar número</td></tr>
+    <tr><td><kbd>g</kbd><kbd>c</kbd><kbd>c</kbd></td><td>comentar a linha</td></tr>
+    <tr><td><kbd>g</kbd><kbd>s</kbd><kbd>a</kbd> <kbd>g</kbd><kbd>s</kbd><kbd>d</kbd> <kbd>g</kbd><kbd>s</kbd><kbd>r</kbd></td><td>surround: adicionar / remover / trocar</td></tr>
+    <tr><td><kbd>Alt</kbd>+<kbd>j</kbd> / <kbd>Alt</kbd>+<kbd>k</kbd></td><td>mover linha ou seleção</td></tr>
+    <tr><td><kbd>q</kbd><kbd>a</kbd> ... <kbd>q</kbd> ... <kbd>@</kbd><kbd>a</kbd></td><td>gravar e executar macro</td></tr>
+    <tr><td><kbd>m</kbd><kbd>a</kbd> / <kbd>'</kbd><kbd>a</kbd></td><td>criar mark / ir pra mark</td></tr>
+    <tr><td><kbd>z</kbd><kbd>a</kbd></td><td>abrir/fechar dobra</td></tr>
+    <tr><td><kbd>z</kbd><kbd>R</kbd> / <kbd>z</kbd><kbd>M</kbd></td><td>abrir todas / fechar todas as dobras</td></tr>
+    <tr><td><kbd>z</kbd><kbd>z</kbd></td><td>centralizar a tela no cursor</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+</div>
+
+<div class="wrap">
+
+<!-- ══ PROBLEMAS ══════════════════════════════════════ -->
+<section id="problemas">
+  <p class="eyebrow">Referência</p>
+  <h2>Quando quebrar</h2>
+
+  <h3>Diagnóstico geral</h3>
+  <div class="kt-wrap">
+  <table class="kt">
+    <tr><td><code>:checkhealth</code></td><td>o exame completo</td></tr>
+    <tr><td><code>:Lazy</code></td><td>estado dos plugins; <kbd>U</kbd> atualiza, <kbd>x</kbd> limpa os órfãos</td></tr>
+    <tr><td><code>:Lazy profile</code></td><td>quanto cada plugin custa no startup</td></tr>
+    <tr><td><code>:LspInfo</code></td><td>quais servidores estão anexados a este buffer</td></tr>
+    <tr><td><code>:LspLog</code></td><td>o log do LSP, quando o rust-analyzer age estranho</td></tr>
+    <tr><td><code>:ConformInfo</code></td><td>qual formatter vai rodar neste arquivo</td></tr>
+    <tr><td><code>:Mason</code></td><td>instalar/atualizar ferramentas externas</td></tr>
+    <tr><td><code>:messages</code></td><td>as mensagens que passaram rápido demais</td></tr>
+  </table>
+  </div>
+
+  <h3>Sintomas comuns</h3>
+
+  <h4>Ícones aparecem como quadrados ou "tofu"</h4>
+  <p>A fonte do terminal não é uma Nerd Font. Configure <strong>Hack Nerd Font Mono</strong> nas preferências do seu emulador de terminal — não é config do Neovim.</p>
+
+  <h4>O autocomplete de Rust não aparece</h4>
+  <ol class="steps">
+    <li><code>:LspInfo</code> — o <code>rust-analyzer</code> está anexado?</li>
+    <li>Se não: você abriu o nvim de dentro de um diretório sem <code>Cargo.toml</code> na raiz? O rustaceanvim procura o <code>Cargo.toml</code> subindo a árvore.</li>
+    <li>Ele ainda está indexando? Olhe o canto inferior direito.</li>
+    <li><code>:LspRestart</code> força o reinício.</li>
+  </ol>
+
+  <h4>"rust-analyzer not found"</h4>
+  <p>Com rustup: <code>rustup component add rust-analyzer</code>. Confirme com <code>rust-analyzer --version</code>.</p>
+
+  <h4>Ir pra definição na std não funciona</h4>
+  <p>Falta o código-fonte da std: <code>rustup component add rust-src</code>, depois <code>:LspRestart</code>.</p>
+
+  <h4>O formatador não roda ao salvar</h4>
+  <p><code>:ConformInfo</code> mostra o que ele encontrou. Se o autoformat estiver desligado, <code>:FormatToggle</code> religa (e <code>:FormatToggle!</code> alterna só este buffer).</p>
+
+  <h4>Highlight sumiu ou está errado num arquivo</h4>
+  <p>Parser faltando. <code>:checkhealth nvim-treesitter</code> lista o que existe; <code>:TSInstall {linguagem}</code> instala o que falta.</p>
+
+  <h4>Um plugin quebrou depois de atualizar</h4>
+  <p><code>:Lazy</code> → <kbd>r</kbd> faz rollback pro último estado conhecido bom. O <code>lazy-lock.json</code> guarda os commits exatos — versione ele junto com a config.</p>
+
+  <h4>O Sidekick não acha um CLI</h4>
+  <p><code>:checkhealth sidekick</code> lista o que ele encontrou. Ele procura no <code>$PATH</code> — se o binário está em <code>~/.local/bin</code>, confirme que esse diretório está no PATH do shell que lançou o Neovim.</p>
+
+  <h4>Algo está muito errado e você quer recomeçar</h4>
+<pre><code><span class="c"># apaga só o estado, preservando a config</span>
+rm -rf ~/.local/share/nvim ~/.local/state/nvim ~/.cache/nvim
+nvim  <span class="c"># reinstala tudo do zero</span></code></pre>
+  <p>Seus backups da config anterior estão em <code>~/.local/share/nvim.bak.*</code>.</p>
+</section>
+
+<!-- ══ ESTENDER ═══════════════════════════════════════ -->
+<section id="estender">
+  <p class="eyebrow">Referência</p>
+  <h2>Estender a config</h2>
+
+  <h3>Adicionar um plugin</h3>
+  <p>Crie um arquivo em <code>~/.config/nvim/lua/plugins/</code> (ou edite um existente). Qualquer <code>.lua</code> nessa pasta que devolva uma tabela é carregado automaticamente.</p>
+<pre><code><span class="c">-- lua/plugins/meu.lua</span>
+<span class="k">return</span> {
+  {
+    <span class="s">"autor/plugin.nvim"</span>,
+    event = <span class="s">"VeryLazy"</span>,        <span class="c">-- quando carregar</span>
+    opts = { ... },            <span class="c">-- vira require("plugin").setup(opts)</span>
+    keys = {                   <span class="c">-- carrega só quando a tecla é usada</span>
+      { <span class="s">"&lt;leader&gt;zz"</span>, <span class="s">"&lt;cmd&gt;PluginDoStuff&lt;cr&gt;"</span>, desc = <span class="s">"Faz a coisa"</span> },
+    },
+  },
+}</code></pre>
+  <p>Salve e rode <code>:Lazy sync</code>.</p>
+
+  <div class="panel tip">
+    <div class="ph">Sempre preencha o <code>desc</code></div>
+    <p>É ele que aparece no which-key e na busca de atalhos. Um atalho sem descrição é um atalho que você vai esquecer.</p>
+  </div>
+
+  <h3>Adicionar um LSP de outra linguagem</h3>
+  <ol class="steps">
+    <li><code>:Mason</code>, busque o servidor, <kbd>i</kbd> instala</li>
+    <li>Em <code>lua/plugins/lsp.lua</code>, adicione o nome em <code>ensure_installed</code></li>
+    <li>Se precisar de configuração, adicione um bloco <code>vim.lsp.config("nome", { settings = {...} })</code></li>
+  </ol>
+
+  <h3>Mudar um atalho</h3>
+  <p>Atalhos globais moram em <code>lua/config/keymaps.lua</code>. Atalhos de plugin ficam no bloco <code>keys</code> do próprio plugin — mude lá, não no keymaps.lua, senão o lazy vai carregar o plugin no atalho antigo.</p>
+
+  <h3>Mudar o tema</h3>
+  <p>Em <code>lua/plugins/ui.lua</code>, o campo <code>style</code> aceita <code>night</code>, <code>storm</code>, <code>moon</code> ou <code>day</code>. Pra trocar de família inteira, substitua o plugin <code>tokyonight.nvim</code> e ajuste o <code>theme</code> da lualine.</p>
+
+  <h3>Versionar a config</h3>
+<pre><code>cd ~/.config/nvim
+git init &amp;&amp; git add -A
+git commit -m <span class="s">"config inicial"</span></code></pre>
+  <p>Inclua o <code>lazy-lock.json</code> — ele fixa a versão exata de cada plugin e faz a config ser reproduzível em outra máquina.</p>
+
+  <h3>Onde aprender mais</h3>
+  <ul>
+    <li><code>:help</code> — a melhor documentação de software que existe. Comece por <code>:help user-manual</code>.</li>
+    <li><code>:Tutor</code> — o tutorial interativo oficial, ~30 min. Vale mesmo pra quem já conhece o básico.</li>
+    <li><code>:help lua-guide</code> — a API Lua do Neovim, pra quando quiser escrever suas próprias funções.</li>
+    <li><code>:help rustaceanvim</code>, <code>:help blink-cmp</code>, <code>:help snacks.nvim</code> — todo plugin bom traz doc offline.</li>
+  </ul>
+
+  <div class="panel key">
+    <div class="ph">O único conselho de aprendizado</div>
+    <p>Não tente decorar esta página. Trabalhe normalmente e, toda vez que se pegar fazendo algo repetitivo ou desajeitado, pare e procure o jeito certo — aqui, no <kbd class="lead">Espaço</kbd><kbd>s</kbd><kbd>k</kbd> ou no <code>:help</code>. Um atalho novo por dia, aprendido no momento em que você precisou dele, gruda. Vinte decorados numa tarde, não.</p>
+  </div>
+</section>
+
+<footer>
+  <p>Config em <code>~/.config/nvim</code> · Neovim 0.12.5 · Tokyo Night · leader = <kbd>Espaço</kbd></p>
+</footer>
+
+</div><!-- /wrap -->
+</main>
+</div>
+
+<script>
+(function(){
+  // ── Busca da cheatsheet ───────────────────────────────
+  var q = document.getElementById('q');
+  var sheet = document.getElementById('sheet');
+  var hits = document.getElementById('hits');
+  if(q && sheet){
+    var rows = Array.prototype.slice.call(sheet.querySelectorAll('tbody tr'));
+    var total = rows.filter(function(r){ return r.children.length > 1; }).length;
+    hits.textContent = total + ' atalhos';
+
+    q.addEventListener('input', function(){
+      var term = q.value.trim().toLowerCase();
+      if(!term){
+        rows.forEach(function(r){ r.hidden = false; });
+        hits.textContent = total + ' atalhos';
+        return;
+      }
+      var shown = 0;
+      rows.forEach(function(r){
+        var isHeader = r.children.length === 1;
+        if(isHeader){ r.hidden = true; return; }
+        var txt = r.textContent.toLowerCase();
+        var match = txt.indexOf(term) !== -1;
+        r.hidden = !match;
+        if(match) shown++;
+      });
+      hits.textContent = shown + (shown === 1 ? ' atalho' : ' atalhos');
+    });
+  }
+
+  // ── Destaque da seção atual no menu lateral ───────────
+  var links = Array.prototype.slice.call(document.querySelectorAll('.rail a'));
+  var map = {};
+  links.forEach(function(a){
+    var id = a.getAttribute('href').slice(1);
+    var el = document.getElementById(id);
+    if(el) map[id] = a;
+  });
+  var obs = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){
+        links.forEach(function(a){ a.classList.remove('on'); });
+        var a = map[e.target.id];
+        if(a) a.classList.add('on');
+      }
+    });
+  }, { rootMargin: '0px 0px -75% 0px', threshold: 0 });
+  Object.keys(map).forEach(function(id){ obs.observe(document.getElementById(id)); });
+})();
+</script>

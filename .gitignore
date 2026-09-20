@@ -1,0 +1,8 @@
+# estado local do nvim — nunca versionar
+nvim/.netrwhist
+nvim/spell/
+*.bak.*
+
+# lixo de sistema
+.DS_Store
+*.swp
