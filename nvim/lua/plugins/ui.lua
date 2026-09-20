@@ -1,33 +1,7 @@
 -- ╭─ Aparência: tema, statusline, abas, notificações, dashboard ─╮
 return {
 
-  -- ── Tema Tokyo Night ───────────────────────────────────────
-  {
-    "folke/tokyonight.nvim",
-    lazy = false,
-    priority = 1000, -- carrega ANTES de todo o resto
-    opts = {
-      style = "night",          -- night | storm | moon | day
-      transparent = false,
-      terminal_colors = true,
-      styles = {
-        comments = { italic = true },
-        keywords = { italic = true },
-        functions = { bold = true },
-        sidebars = "dark",
-        floats = "dark",
-      },
-      on_highlights = function(hl, c)
-        -- bordas de janelas flutuantes mais visíveis
-        hl.FloatBorder = { fg = c.blue0, bg = c.bg_float }
-        hl.NormalFloat = { bg = c.bg_float }
-      end,
-    },
-    config = function(_, opts)
-      require("tokyonight").setup(opts)
-      vim.cmd.colorscheme("tokyonight")
-    end,
-  },
+  -- (o tema mora em lua/plugins/theme.lua)
 
   -- ── snacks.nvim: o canivete suíço do folke ─────────────────
   -- Substitui telescope, nvim-tree, notify, dressing, indent-blankline,
@@ -67,30 +41,47 @@ return {
       lazygit = { enabled = true },
       dashboard = {
         enabled = true,
-        preset = {
-          header = [[
- ███╗   ██╗ ███████╗ ██████╗  ██╗   ██╗ ██╗ ███╗   ███╗
- ████╗  ██║ ██╔════╝██╔═══██╗ ██║   ██║ ██║ ████╗ ████║
- ██╔██╗ ██║ █████╗  ██║   ██║ ██║   ██║ ██║ ██╔████╔██║
- ██║╚██╗██║ ██╔══╝  ██║   ██║ ╚██╗ ██╔╝ ██║ ██║╚██╔╝██║
- ██║ ╚████║ ███████╗╚██████╔╝  ╚████╔╝  ██║ ██║ ╚═╝ ██║
- ╚═╝  ╚═══╝ ╚══════╝ ╚═════╝    ╚═══╝   ╚═╝ ╚═╝     ╚═╝
-                      rust  ·  ai  ·  speed             ]],
-          keys = {
-            { icon = "  ", key = "f", desc = "Buscar arquivo",   action = ":lua Snacks.dashboard.pick('files')" },
-            { icon = "  ", key = "n", desc = "Arquivo novo",     action = ":ene | startinsert" },
-            { icon = "  ", key = "g", desc = "Grep no projeto",  action = ":lua Snacks.dashboard.pick('live_grep')" },
-            { icon = "  ", key = "r", desc = "Recentes",         action = ":lua Snacks.dashboard.pick('oldfiles')" },
-            { icon = "  ", key = "s", desc = "Restaurar sessão", section = "session" },
-            { icon = "󰒲 ", key = "l", desc = "Lazy (plugins)",   action = ":Lazy" },
-            { icon = "  ", key = "m", desc = "Mason (LSP/tools)", action = ":Mason" },
-            { icon = "  ", key = "q", desc = "Sair",             action = ":qa" },
-          },
-        },
         sections = {
-          { section = "header" },
+-- header desenhado à mão: gradiente ciano -> esmeralda nas
+          -- linhas (as cores do logotipo) e o grafo da hidra em violeta.
+          -- Os grupos HydraGrad*/HydraNode/HydraEdge vêm do tema.
+          {
+            align = "center",
+            padding = 2,
+            text = {
+              { " ███╗   ██╗ ███████╗ ██████╗  ██╗   ██╗ ██╗ ███╗   ███╗\n", hl = "HydraGrad1" },
+              { " ████╗  ██║ ██╔════╝██╔═══██╗ ██║   ██║ ██║ ████╗ ████║\n", hl = "HydraGrad2" },
+              { " ██╔██╗ ██║ █████╗  ██║   ██║ ██║   ██║ ██║ ██╔████╔██║\n", hl = "HydraGrad3" },
+              { " ██║╚██╗██║ ██╔══╝  ██║   ██║ ╚██╗ ██╔╝ ██║ ██║╚██╔╝██║\n", hl = "HydraGrad4" },
+              { " ██║ ╚████║ ███████╗╚██████╔╝  ╚████╔╝  ██║ ██║ ╚═╝ ██║\n", hl = "HydraGrad5" },
+              { " ╚═╝  ╚═══╝ ╚══════╝ ╚═════╝    ╚═══╝   ╚═╝ ╚═╝     ╚═╝\n", hl = "HydraGrad6" },
+              { "\n" },
+              { "        ⬡", hl = "HydraNode" }, { "───────", hl = "HydraEdge" },
+              { "⬡",         hl = "HydraNode" }, { "───────", hl = "HydraEdge" },
+              { "⬡",         hl = "HydraNode" }, { "───────", hl = "HydraEdge" },
+              { "⬡",         hl = "HydraNode" }, { "───────", hl = "HydraEdge" },
+              { "⬡\n",       hl = "HydraNode" },
+            },
+          },
+          {
+            align = "center",
+            padding = 1,
+            text = { { "rust  ·  ai  ·  speed", hl = "SnacksDashboardFooter" } },
+          },
           { section = "keys", gap = 1, padding = 1 },
           { section = "startup" },
+        },
+        preset = {
+          keys = {
+            { icon = "  ", key = "f", desc = "Buscar arquivo",   action = ":lua Snacks.dashboard.pick('files')" },
+            { icon = "  ", key = "n", desc = "Arquivo novo",     action = ":ene | startinsert" },
+            { icon = "  ", key = "g", desc = "Grep no projeto",  action = ":lua Snacks.dashboard.pick('live_grep')" },
+            { icon = "  ", key = "r", desc = "Recentes",         action = ":lua Snacks.dashboard.pick('oldfiles')" },
+            { icon = "  ", key = "s", desc = "Restaurar sessão", section = "session" },
+            { icon = "󰒲  ", key = "l", desc = "Lazy (plugins)",   action = ":Lazy" },
+            { icon = "  ", key = "m", desc = "Mason (LSP/tools)", action = ":Mason" },
+            { icon = "  ", key = "q", desc = "Sair",             action = ":qa" },
+          },
         },
       },
       styles = {
@@ -116,9 +107,27 @@ return {
     event = "VeryLazy",
     dependencies = { "nvim-tree/nvim-web-devicons" },
     opts = function()
+      local h = require("hydra.palette")
+      -- tema da statusline derivado da paleta: cada modo tem sua cor do neon
+      local function mode(fg)
+        return { a = { bg = fg, fg = h.bg, gui = "bold" },
+                 b = { bg = h.bg_raised, fg = fg },
+                 c = { bg = h.bg_dark, fg = h.fg_dark } }
+      end
+      local theme = {
+        normal   = mode(h.emerald),
+        insert   = mode(h.cyan),
+        visual   = mode(h.purple),
+        replace  = mode(h.red),
+        command  = mode(h.orange),
+        terminal = mode(h.teal),
+        inactive = { a = { bg = h.bg_dark, fg = h.comment },
+                     b = { bg = h.bg_dark, fg = h.comment },
+                     c = { bg = h.bg_dark, fg = h.comment } },
+      }
       return {
         options = {
-          theme = "tokyonight",
+          theme = theme,
           globalstatus = true,
           component_separators = { left = "│", right = "│" },
           section_separators = { left = "", right = "" },
@@ -137,7 +146,7 @@ return {
             {
               function() return require("sidekick.status").get() and "AI" or "" end,
               cond = function() return package.loaded["sidekick"] ~= nil end,
-              color = { fg = "#7aa2f7" },
+              color = { fg = h.emerald, gui = "bold" },
             },
             { "diff", symbols = { added = "+", modified = "~", removed = "-" } },
           },
@@ -155,6 +164,21 @@ return {
     event = "VeryLazy",
     dependencies = { "nvim-tree/nvim-web-devicons" },
     opts = {
+      highlights = function()
+        local h = require("hydra.palette")
+        return {
+          fill = { bg = h.bg_dark },
+          background = { bg = h.bg_dark, fg = h.comment },
+          buffer_selected = { bg = h.bg, fg = h.emerald, bold = true, italic = false },
+          buffer_visible = { bg = h.bg_dark, fg = h.fg_dark },
+          separator = { bg = h.bg_dark, fg = h.bg_dark },
+          separator_selected = { bg = h.bg, fg = h.bg_dark },
+          indicator_selected = { bg = h.bg, fg = h.emerald },
+          modified_selected = { bg = h.bg, fg = h.orange },
+          error_selected = { bg = h.bg, fg = h.red, bold = true },
+          warning_selected = { bg = h.bg, fg = h.orange, bold = true },
+        }
+      end,
       options = {
         close_command = function(n) Snacks.bufdelete(n) end,
         right_mouse_command = function(n) Snacks.bufdelete(n) end,

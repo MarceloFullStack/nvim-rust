@@ -42,6 +42,8 @@ Testado em Arch/Manjaro. Tem caminhos para Debian/Ubuntu, Fedora, openSUSE e mac
 
 **Estrutura** — treesitter (branch `main`), textobjects semânticos (`cif` troca o corpo da função, `daa` remove um argumento com a vírgula), [mini.nvim](https://github.com/echasnovski/mini.nvim) para pares, surround e mover blocos.
 
+**Tema** — a paleta do [Git Hydra](https://marcelofullstack.github.io/git-hydra-app/) aplicada ao editor inteiro: fundo `#06090e`, keywords em violeta, tipos em esmeralda, funções em ciano. O `tokyonight` entra como *motor* (ele já cobre dezenas de plugins) e a config troca as cores por baixo via `on_colors`. A paleta fica num arquivo só, `lua/hydra/palette.lua` — mude um hex e ele se propaga para syntax, statusline, abas, autocomplete, gutter do git e terminal embutido.
+
 **Resto** — LSP via mason + lspconfig, formatação com conform, debug com nvim-dap + codelldb, git com gitsigns + lazygit, which-key, trouble, oil, grug-far, persistence.
 
 ## A decisão sobre IA
@@ -81,13 +83,16 @@ O manual completo está em **[marcelofullstack.github.io/nvim-rust](https://marc
 nvim/
 ├── init.lua                 ponto de entrada
 └── lua/
+    ├── hydra/
+    │   └── palette.lua      as cores da marca, num lugar só
     ├── config/
     │   ├── options.lua      opções do editor
     │   ├── lazy.lua         bootstrap do gerenciador
     │   ├── keymaps.lua      atalhos globais
     │   └── autocmds.lua     comportamentos automáticos
     └── plugins/
-        ├── ui.lua           tema, statusline, dashboard
+        ├── theme.lua        paleta Git Hydra aplicada ao editor
+        ├── ui.lua           statusline, abas, dashboard
         ├── editor.lua       movimento, git, busca, sessões
         ├── treesitter.lua   parsing
         ├── lsp.lua          LSP e formatação

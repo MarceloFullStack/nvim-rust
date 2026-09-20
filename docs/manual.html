@@ -357,7 +357,7 @@ footer{border-top:1px solid var(--line); margin-top:60px; padding-top:22px; colo
       <span>startup <b>38 ms</b></span>
       <span><b>38</b> plugins</span>
       <span><b>25</b> parsers treesitter</span>
-      <span>tema <b>Tokyo Night</b></span>
+      <span>tema <b>Git Hydra</b></span>
       <span>leader = <b>espaço</b></span>
     </div>
   </div>
@@ -403,6 +403,7 @@ footer{border-top:1px solid var(--line); margin-top:60px; padding-top:22px; colo
     <tr><td><code>conform.nvim</code></td><td>Formatação ao salvar (<code>rustfmt</code>, <code>stylua</code>, <code>taplo</code>).</td></tr>
     <tr><td><code>crates.nvim</code></td><td>No <code>Cargo.toml</code>: mostra a versão mais nova de cada dep, autocompleta nomes e features, abre a doc.</td></tr>
     <tr><td><code>nvim-dap</code></td><td>Debugger com breakpoints reais, via <code>codelldb</code>.</td></tr>
+    <tr><td><code>tokyonight</code></td><td>Entra como <em>motor</em> de tema, não como paleta: traz highlights prontos para dezenas de plugins, e a config troca as cores por baixo pela paleta do Git Hydra.</td></tr>
   </table>
   </div>
 
@@ -1696,8 +1697,24 @@ nvim  <span class="c"># reinstala tudo do zero</span></code></pre>
   <h3>Mudar um atalho</h3>
   <p>Atalhos globais moram em <code>lua/config/keymaps.lua</code>. Atalhos de plugin ficam no bloco <code>keys</code> do próprio plugin — mude lá, não no keymaps.lua, senão o lazy vai carregar o plugin no atalho antigo.</p>
 
-  <h3>Mudar o tema</h3>
-  <p>Em <code>lua/plugins/ui.lua</code>, o campo <code>style</code> aceita <code>night</code>, <code>storm</code>, <code>moon</code> ou <code>day</code>. Pra trocar de família inteira, substitua o plugin <code>tokyonight.nvim</code> e ajuste o <code>theme</code> da lualine.</p>
+  <h3>Mudar as cores</h3>
+  <p>A paleta inteira mora num arquivo só: <code>lua/hydra/palette.lua</code>. Mude um hex ali e ele se propaga para o syntax, a statusline, as abas, o autocomplete, a gutter do git e o terminal embutido.</p>
+<pre><code><span class="c">-- lua/hydra/palette.lua</span>
+<span class="k">return</span> {
+  bg      = <span class="s">"#06090e"</span>,   <span class="c">-- o preto esverdeado da marca</span>
+  emerald = <span class="s">"#34d399"</span>,   <span class="c">-- accent principal</span>
+  cyan    = <span class="s">"#22d3ee"</span>,   <span class="c">-- funções</span>
+  purple  = <span class="s">"#a78bfa"</span>,   <span class="c">-- keywords</span>
+  ...
+}</code></pre>
+  <p>O mapeamento fica em <code>lua/plugins/theme.lua</code>, dentro de <code>on_colors</code> (a paleta base) e <code>on_highlights</code> (os refinos por grupo, como <code>@keyword</code> ou <code>@type</code>).</p>
+
+  <div class="panel key">
+    <div class="ph">Por que ainda existe um tokyonight aqui</div>
+    <p>Escrever um colorscheme do zero significa escrever highlights para cada plugin — e ficar sem cor no dia em que você instalar o próximo. O <code>tokyonight</code> entra como <strong>motor</strong>: ele já cobre blink.cmp, snacks, lualine, trouble, gitsigns e dezenas de outros, e a config troca as cores por baixo. Você fica com identidade própria e cobertura total.</p>
+  </div>
+
+  <p>Se preferir voltar a um tema pronto, comente a chamada de <code>on_colors</code>/<code>on_highlights</code> em <code>theme.lua</code> e o Tokyo Night original reaparece.</p>
 
   <h3>Sobreviver a uma formatação</h3>
   <p>Existe um repositório pronto em <code>~/nvim-rust</code>, com a config, o manual e um instalador que reconstrói tudo numa máquina zerada:</p>
@@ -1764,7 +1781,7 @@ cd ~/nvim-rust &amp;&amp; git add -A &amp;&amp; git commit -m <span class="s">"a
 </div>
 
 <footer>
-  <p>Config em <code>~/.config/nvim</code> · Neovim 0.12.5 · Tokyo Night · leader = <kbd>Espaço</kbd></p>
+  <p>Config em <code>~/.config/nvim</code> · Neovim 0.12.5 · tema Git Hydra · leader = <kbd>Espaço</kbd></p>
 </footer>
 
 </div><!-- /wrap -->
